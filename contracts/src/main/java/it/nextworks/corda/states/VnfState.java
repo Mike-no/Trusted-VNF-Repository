@@ -8,9 +8,7 @@ import net.corda.core.contracts.LinearState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
-import net.corda.core.serialization.CordaSerializable;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.List;
