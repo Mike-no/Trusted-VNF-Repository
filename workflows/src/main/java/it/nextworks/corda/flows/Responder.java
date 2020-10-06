@@ -1,4 +1,4 @@
-package com.template.flows;
+package it.nextworks.corda.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import net.corda.core.flows.*;

@@ -1,7 +1,7 @@
-package com.template.states;
+package it.nextworks.corda.states;
 
 import com.sun.istack.NotNull;
-import com.template.contracts.VnfContract;
+import it.nextworks.corda.contracts.VnfContract;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.LinearState;

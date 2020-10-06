@@ -1,6 +1,6 @@
-package com.template.contracts;
+package it.nextworks.corda.contracts;
 
-import com.template.states.VnfState;
+import it.nextworks.corda.states.VnfState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.CommandWithParties;
 import net.corda.core.contracts.Contract;

@@ -1,4 +1,4 @@
-package com.template;
+package it.nextworks.corda.flows;
 
 import com.google.common.collect.ImmutableList;
 import net.corda.core.concurrent.CordaFuture;
