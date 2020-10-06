@@ -8,6 +8,7 @@ import net.corda.core.contracts.LinearState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
+import net.corda.core.serialization.CordaSerializable;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -25,8 +26,8 @@ public class VnfState implements LinearState {
     private final String version;
     private final String requirements;
     private final String resources;
-    private final URL imageLink;
-    private final URL repositoryLink;
+    private final String imageLink;
+    private final String repositoryLink;
     private final int repositoryHash;
     private final Amount<Currency> price;
 
@@ -52,7 +53,7 @@ public class VnfState implements LinearState {
      */
     public VnfState(UniqueIdentifier linearId, String name, String description,
                     String serviceType, String version, String requirements,
-                    String resources, URL imageLink, URL repositoryLink,
+                    String resources, String imageLink, String repositoryLink,
                     int repositoryHash, Amount<Currency> price, Party author,
                     Party repositoryNode) {
         this.linearId = linearId;
@@ -101,11 +102,11 @@ public class VnfState implements LinearState {
         return resources;
     }
 
-    public URL getImageLink() {
+    public String getImageLink() {
         return imageLink;
     }
 
-    public URL getRepositoryLink() {
+    public String getRepositoryLink() {
         return repositoryLink;
     }
 

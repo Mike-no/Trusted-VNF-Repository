@@ -18,7 +18,7 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
 public class VnfContract implements Contract {
 
     /** This is used to identify our contract when building a transaction. */
-    public static final String ID = "com.template.contracts.VnfContract";
+    public static final String ID = "it.nextworks.corda.contracts.VnfContract";
 
     private static final String strErrMsg  = " parameter cannot be null, empty or only composed by whitespace";
     private static final String strNullErr = " parameter cannot be null";
@@ -49,9 +49,9 @@ public class VnfContract implements Contract {
                 require.using("The <version>" + strErrMsg, isWellFormatted(output.getVersion()));
                 require.using("The <requirements>" + strErrMsg, isWellFormatted(output.getRequirements()));
                 require.using("The <resources>" + strErrMsg, isWellFormatted(output.getResources()));
-                require.using("The <imageLink>" + strNullErr, output.getImageLink() != null);
-                URL repositoryLink = output.getRepositoryLink();
-                require.using("The <repositoryLink>" + strNullErr, repositoryLink != null);
+                require.using("The <imageLink>" + strNullErr, isWellFormatted(output.getImageLink()));
+                String repositoryLink = output.getRepositoryLink();
+                require.using("The <repositoryLink>" + strNullErr, isWellFormatted(repositoryLink));
                 require.using("The <repositoryHash> parameter does not match the hash value of" +
                         "the <repositoryLink> parameter",
                         output.getRepositoryHash() == repositoryLink.hashCode());
