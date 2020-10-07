@@ -34,19 +34,19 @@ public class VnfState implements LinearState {
 
     /**
      * Constructor of the VNF State representation
-     * @param linearId LinearState models shared facts for which there is only
-     *                 one current version at any point in time
-     * @param name name of this VNF
-     * @param description description of this VNF
-     * @param serviceType identify the service type of this VNF
-     * @param version version of this VNF
-     * @param requirements list of requirements needed by this VNF
-     * @param resources resources needed by this VNF
-     * @param imageLink customized marketplace cover art location of this VNF
+     * @param linearId       LinearState models shared facts for which there is only
+     *                       one current version at any point in time
+     * @param name           name of this VNF
+     * @param description    description of this VNF
+     * @param serviceType    identify the service type of this VNF
+     * @param version        version of this VNF
+     * @param requirements   list of requirements needed by this VNF
+     * @param resources      resources needed by this VNF
+     * @param imageLink      customized marketplace cover art location of this VNF
      * @param repositoryLink link to package repository (package location) of this VNF
      * @param repositoryHash hash of the repository link of this VNF
-     * @param price price of this VNF
-     * @param author author of this VNF
+     * @param price          price of this VNF
+     * @param author         author of this VNF
      * @param repositoryNode Repository Node that will store this VnfState in the vault
      */
     public VnfState(UniqueIdentifier linearId, String name, String description,
@@ -54,18 +54,18 @@ public class VnfState implements LinearState {
                     String resources, String imageLink, String repositoryLink,
                     int repositoryHash, Amount<Currency> price, Party author,
                     Party repositoryNode) {
-        this.linearId = linearId;
-        this.name = name;
-        this.description = description;
-        this.serviceType = serviceType;
-        this.version = version;
-        this.requirements = requirements;
-        this.resources = resources;
-        this.imageLink = imageLink;
+        this.linearId       = linearId;
+        this.name           = name;
+        this.description    = description;
+        this.serviceType    = serviceType;
+        this.version        = version;
+        this.requirements   = requirements;
+        this.resources      = resources;
+        this.imageLink      = imageLink;
         this.repositoryLink = repositoryLink;
         this.repositoryHash = repositoryHash;
-        this.price = price;
-        this.author = author;
+        this.price          = price;
+        this.author         = author;
         this.repositoryNode = repositoryNode;
     }
 
