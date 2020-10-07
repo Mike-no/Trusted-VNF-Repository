@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.Locale;
 
-import static it.nextworks.corda.contracts.Utils.*;
+import static it.nextworks.corda.contracts.VnfUtils.*;
 import static net.corda.testing.node.NodeTestUtils.ledger;
 
 /** Test VnfContract class in cases where the command used in the transaction is CreateVNF */
@@ -78,7 +78,7 @@ public class CreateVnfContractTest {
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
 
-                return tx.failsWith(Utils.createVnfInputErr);
+                return tx.failsWith(VnfUtils.createVnfInputErr);
             });
             return null;
         }));
@@ -97,7 +97,7 @@ public class CreateVnfContractTest {
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
 
-                return tx.failsWith(Utils.createVnfOutputErr);
+                return tx.failsWith(VnfUtils.createVnfOutputErr);
             });
             return null;
         }));
@@ -135,7 +135,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.name + strErrMsg);
+                    return tw.failsWith(VnfUtils.name + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -144,7 +144,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.name + strErrMsg);
+                    return tw.failsWith(VnfUtils.name + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, " ", description, serviceType, version,
@@ -152,7 +152,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.name + strErrMsg);
+                return tx.failsWith(VnfUtils.name + strErrMsg);
             });
             return null;
         }));
@@ -172,7 +172,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.description + strErrMsg);
+                    return tw.failsWith(VnfUtils.description + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -181,7 +181,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.description + strErrMsg);
+                    return tw.failsWith(VnfUtils.description + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, name, " ", serviceType, version,
@@ -189,7 +189,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.description + strErrMsg);
+                return tx.failsWith(VnfUtils.description + strErrMsg);
             });
             return null;
         }));
@@ -209,7 +209,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.serviceType + strErrMsg);
+                    return tw.failsWith(VnfUtils.serviceType + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -218,7 +218,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.serviceType + strErrMsg);
+                    return tw.failsWith(VnfUtils.serviceType + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, name, description, " ", version,
@@ -226,7 +226,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.serviceType + strErrMsg);
+                return tx.failsWith(VnfUtils.serviceType + strErrMsg);
             });
             return null;
         }));
@@ -246,7 +246,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.version + strErrMsg);
+                    return tw.failsWith(VnfUtils.version + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -255,7 +255,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.version + strErrMsg);
+                    return tw.failsWith(VnfUtils.version + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, name, description, serviceType, " ",
@@ -263,7 +263,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.version + strErrMsg);
+                return tx.failsWith(VnfUtils.version + strErrMsg);
             });
             return null;
         }));
@@ -283,7 +283,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.requirements + strErrMsg);
+                    return tw.failsWith(VnfUtils.requirements + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -292,7 +292,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.requirements + strErrMsg);
+                    return tw.failsWith(VnfUtils.requirements + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, name, description, serviceType, version,
@@ -300,7 +300,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.requirements + strErrMsg);
+                return tx.failsWith(VnfUtils.requirements + strErrMsg);
             });
             return null;
         }));
@@ -320,7 +320,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.resources + strErrMsg);
+                    return tw.failsWith(VnfUtils.resources + strErrMsg);
                 });
 
                 tx.tweak(tw -> {
@@ -329,7 +329,7 @@ public class CreateVnfContractTest {
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
-                    return tw.failsWith(Utils.resources + strErrMsg);
+                    return tw.failsWith(VnfUtils.resources + strErrMsg);
                 });
 
                 VnfState vnfState = new VnfState(id, name, description, serviceType, version,
@@ -337,7 +337,7 @@ public class CreateVnfContractTest {
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
-                return tx.failsWith(Utils.resources + strErrMsg);
+                return tx.failsWith(VnfUtils.resources + strErrMsg);
             });
             return null;
         }));

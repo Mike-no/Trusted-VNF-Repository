@@ -20,6 +20,7 @@ import net.corda.core.utilities.ProgressTracker.Step;
 
 import java.util.Currency;
 
+import static it.nextworks.corda.flows.CreateVnfFlowUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 public class CreateVnfFlow {
@@ -37,17 +38,16 @@ public class CreateVnfFlow {
         private final String repositoryLink;
         private final Amount<Currency> price;
 
-        private final Step GENERATING_TRANSACTION = new Step("Generating transaction based on new VNF.");
-        private final Step VERIFYING_TRANSACTION  = new Step("Verifying contract constraints.");
-        private final Step SIGNING_TRANSACTION    = new Step("Signing transaction with our private key.");
-        private final Step GATHERING_SIGNS        = new Step("Gathering the Repository Node's signature."){
+        private final Step GENERATING_TRANSACTION = new Step(CreateVnfFlowUtils.GENERATING_TRANSACTION);
+        private final Step VERIFYING_TRANSACTION  = new Step(CreateVnfFlowUtils.VERIFYING_TRANSACTION);
+        private final Step SIGNING_TRANSACTION    = new Step(CreateVnfFlowUtils.SIGNING_TRANSACTION);
+        private final Step GATHERING_SIGNS        = new Step(CreateVnfFlowUtils.GATHERING_SIGNS){
             @Override
             public ProgressTracker childProgressTracker() {
                 return CollectSignaturesFlow.Companion.tracker();
             }
         };
-        private final Step FINALISING_TRANSACTION = new Step("Obtaining Notary signature and " +
-                "recording transaction.") {
+        private final Step FINALISING_TRANSACTION = new Step(CreateVnfFlowUtils.FINALISING_TRANSACTION) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return FinalityFlow.Companion.tracker();
@@ -105,7 +105,7 @@ public class CreateVnfFlow {
             /** Retrieving a reference to notary using the serviceHub [Production Method] */
             final Party notary = getServiceHub()
                     .getNetworkMapCache()
-                    .getNotary(CordaX500Name.parse("O=Notary,L=Pisa,C=IT"));
+                    .getNotary(CordaX500Name.parse(notaryX500Name));
             /**
              * Retrieving our identity and the Repository Node identity that will be used as <author>
              * and <repositoryNode> parameters in the transaction
@@ -113,7 +113,7 @@ public class CreateVnfFlow {
             final Party author = getOurIdentity();
             final Party repositoryNode = getServiceHub()
                     .getNetworkMapCache()
-                    .getPeerByLegalName(CordaX500Name.parse("O=RepositoryNode,L=Pisa,C=IT"));
+                    .getPeerByLegalName(CordaX500Name.parse(repositoryX500Name));
 
             /** Set the current step to GENERATING_TRANSACTION and proceed to build the latter */
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
@@ -181,7 +181,7 @@ public class CreateVnfFlow {
                 protected void checkTransaction(SignedTransaction stx) {
                     requireThat(require -> {
                         ContractState output = stx.getTx().getOutputs().get(0).getData();
-                        require.using("This must be a VNF transaction.", output instanceof VnfState);
+                        require.using(notVnfStateErr, output instanceof VnfState);
                         //VnfState vnf = (VnfState)output;
 
                         // TODO Maybe add additional controls?

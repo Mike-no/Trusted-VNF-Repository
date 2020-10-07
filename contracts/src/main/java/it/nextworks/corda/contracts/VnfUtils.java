@@ -1,7 +1,7 @@
 package it.nextworks.corda.contracts;
 
 /** Simply a class with various utility functions and statements */
-public class Utils {
+public class VnfUtils {
 
     public static final String createVnfInputErr  = "No input should be consumed when create a VNF";
     public static final String createVnfOutputErr = "There should be one output state of type VnfState";
@@ -31,4 +31,6 @@ public class Utils {
 
     public static final String twoSignersErr      = "There must be two signers";
     public static final String mustBeSignersErr   = "<author> and <repositoryNode> must be signers";
+
+    public static final String unknownCommand     = "Unknown command";
 }

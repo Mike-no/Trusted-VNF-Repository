@@ -13,7 +13,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
-import static it.nextworks.corda.contracts.Utils.*;
+import static it.nextworks.corda.contracts.VnfUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 
@@ -63,8 +63,8 @@ public class VnfContract implements Contract {
 
                 final Party author = output.getAuthor();
                 final Party repositoryNode = output.getRepositoryNode();
-                require.using(Utils.author + strNullErr, author != null);
-                require.using(Utils.repositoryNode + strNullErr, repositoryNode != null);
+                require.using(VnfUtils.author + strNullErr, author != null);
+                require.using(VnfUtils.repositoryNode + strNullErr, repositoryNode != null);
                 require.using(sameEntityErr, !author.equals(repositoryNode));
 
                 final List<PublicKey> requiredSigners = command.getSigners();
@@ -84,7 +84,7 @@ public class VnfContract implements Contract {
             // TODO
         }
         else
-            throw new IllegalArgumentException("Unrecognised command");
+            throw new IllegalArgumentException(unknownCommand);
     }
 
     /**
