@@ -21,13 +21,11 @@ public class CreateVnfContractTest {
 
     /** Simulate a Corda Network composed by two nodes: a developer and the repositoryNode */
     private static final TestIdentity devTest =
-            new TestIdentity(new CordaX500Name("devTest",
-                    "Pisa", "IT"));
+            new TestIdentity(CordaX500Name.parse(devX500Name));
     private static final TestIdentity repositoryNodeTest =
-            new TestIdentity(new CordaX500Name("nextworks",
-                    "Pisa", "IT"));
+            new TestIdentity(CordaX500Name.parse(repositoryX500Name));
     private static final MockServices ledgerServices =
-            new MockServices(Arrays.asList("it.nextworks.corda.contracts"),
+            new MockServices(Arrays.asList(cordAppContractsPkg),
                     devTest, repositoryNodeTest);
 
     /** Attributes used to construct transactions inside tests */
