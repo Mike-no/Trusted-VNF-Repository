@@ -3,7 +3,6 @@ package it.nextworks.corda.flows;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.states.VnfState;
 import net.corda.core.concurrent.CordaFuture;
-import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.TransactionState;
@@ -17,9 +16,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.Currency;
 import java.util.List;
-import java.util.Locale;
 
 import static it.nextworks.corda.flows.CreateVnfFlowUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,17 +26,6 @@ public class CreateVnfFlowTest {
     private MockNetwork mockNetwork;
     private StartedMockNode devNodeTest;
     private StartedMockNode repositoryNodeTest;
-
-    /** Attributes used to construct transactions inside tests */
-    private static final String name            = "testVNF";
-    private static final String description     = "test";
-    private static final String serviceType     = "testService";
-    private static final String version         = "1.0";
-    private static final String requirements    = "n.b";
-    private static final String resources       = "n.b";
-    private static final String link            = "https://www.nextworks.it/";
-    private static final Amount<Currency> price = new Amount<>(1,
-            Currency.getInstance(Locale.ITALY));
 
     /** Build a mock network composed by a developer Node, the repository Node and a Notary */
     @Before
@@ -68,8 +54,8 @@ public class CreateVnfFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(name, description, serviceType,
-                version, requirements, resources, link, link, price);
+        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
+                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -80,8 +66,8 @@ public class CreateVnfFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(name, description, serviceType,
-                version, requirements, resources, link, link, price);
+        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
+                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -92,8 +78,8 @@ public class CreateVnfFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(name, description, serviceType,
-                version, requirements, resources, link, link, price);
+        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
+                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -106,8 +92,8 @@ public class CreateVnfFlowTest {
 
     @Test
     public void recordedTransactionHasNoInputsAndASingleOutputVnf() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(name, description, serviceType,
-                version, requirements, resources, link, link, price);
+        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
+                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -126,8 +112,8 @@ public class CreateVnfFlowTest {
 
     @Test
     public void flowRecordsTheCorrectVnfInBothPartiesVaults() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(name, description, serviceType,
-                version, requirements, resources, link, link, price);
+        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
+                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -148,17 +134,16 @@ public class CreateVnfFlowTest {
     }
 
     private void checkStateCorrectness(@NotNull VnfState recordedState) {
-        assertEquals(recordedState.getName(), name);
-        assertEquals(recordedState.getDescription(), description);
-        assertEquals(recordedState.getServiceType(), serviceType);
-        assertEquals(recordedState.getVersion(), version);
-        assertEquals(recordedState.getRequirements(), requirements);
-        assertEquals(recordedState.getResources(), resources);
-        assertEquals(recordedState.getImageLink(), link);
-        assertEquals(recordedState.getRepositoryLink(), link);
-        assertEquals(recordedState.getRepositoryHash(), link.hashCode());
-        assertEquals(recordedState.getRepositoryLink(), link);
-        assertEquals(recordedState.getPrice(), price);
+        assertEquals(recordedState.getName(), testName);
+        assertEquals(recordedState.getDescription(), testDescription);
+        assertEquals(recordedState.getServiceType(), testServiceType);
+        assertEquals(recordedState.getVersion(), testVersion);
+        assertEquals(recordedState.getRequirements(), testRequirements);
+        assertEquals(recordedState.getResources(), testResources);
+        assertEquals(recordedState.getImageLink(), testLink);
+        assertEquals(recordedState.getRepositoryLink(), testLink);
+        assertEquals(recordedState.getRepositoryHash(), testLink.hashCode());
+        assertEquals(recordedState.getPrice(), testPrice);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
     }
