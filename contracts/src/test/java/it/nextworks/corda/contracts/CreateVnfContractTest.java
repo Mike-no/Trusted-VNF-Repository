@@ -2,16 +2,12 @@ package it.nextworks.corda.contracts;
 
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.states.VnfState;
-import net.corda.core.contracts.Amount;
-import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.testing.core.TestIdentity;
 import net.corda.testing.node.MockServices;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Currency;
-import java.util.Locale;
 
 import static it.nextworks.corda.contracts.VnfUtils.*;
 import static net.corda.testing.node.NodeTestUtils.ledger;
@@ -28,31 +24,18 @@ public class CreateVnfContractTest {
             new MockServices(Arrays.asList(cordAppContractsPkg),
                     devTest, repositoryNodeTest);
 
-    /** Attributes used to construct transactions inside tests */
-    private static final UniqueIdentifier id    = new UniqueIdentifier();
-
-    private static final String name            = "testVNF";
-    private static final String description     = "test";
-    private static final String serviceType     = "testService";
-    private static final String version         = "1.0";
-    private static final String requirements    = "n.b";
-    private static final String resources       = "n.b";
-    private static final String link            = "https://www.nextworks.it/";
-    private static final int repositoryHash     = link.hashCode();
-    private static final Amount<Currency> price = new Amount<>(1,
-                    Currency.getInstance(Locale.ITALY));
-
     /** Test that a transaction must include the CreateVNF command */
     @Test
     public void transactionMustIncludeCreateCommand() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                tx.output(VnfContract.ID, new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                tx.output(VnfContract.ID, new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty()));
                 tx.fails();
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
+
                 return tx.verifies();
             });
             return null;
@@ -68,8 +51,8 @@ public class CreateVnfContractTest {
     public void transactionMustHaveNoInputs() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.input(VnfContract.ID, vnfState);
                 tx.output(VnfContract.ID, vnfState);
@@ -87,8 +70,8 @@ public class CreateVnfContractTest {
     public void transactionMustHaveOneOutput() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.output(VnfContract.ID, vnfState);
@@ -106,8 +89,8 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidId() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(null, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(null, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -128,8 +111,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, null, description, serviceType, version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, null, testDescription, testServiceType, testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -137,16 +120,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, "", description, serviceType, version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, "", testDescription, testServiceType, testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.name + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, " ", description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, " ", testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -165,8 +148,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, null, serviceType, version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, null, testServiceType, testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -174,16 +157,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, "", serviceType, version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, "", testServiceType, testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.description + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, name, " ", serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, " ", testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -202,8 +185,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, null, version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, null, testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -211,16 +194,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, "", version,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, "", testVersion,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.serviceType + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, name, description, " ", version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, " ", testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -239,8 +222,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, null,
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, null,
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -248,16 +231,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, "",
-                            requirements, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, "",
+                            testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.version + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, name, description, serviceType, " ",
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, " ",
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -276,8 +259,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                            null, resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                            null, testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -285,16 +268,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                            "", resources, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                            "", testResources, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.requirements + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        " ", resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        " ", testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -313,8 +296,8 @@ public class CreateVnfContractTest {
                         new VnfContract.Commands.CreateVNF());
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                            requirements, null, link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                            testRequirements, null, testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
@@ -322,16 +305,16 @@ public class CreateVnfContractTest {
                 });
 
                 tx.tweak(tw -> {
-                    VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                            requirements, "", link, link, repositoryHash, price,
+                    VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                            testRequirements, "", testLink, testLink, testRepositoryHash, testPrice,
                             devTest.getParty(), repositoryNodeTest.getParty());
                     tw.output(VnfContract.ID, vnfState);
 
                     return tw.failsWith(VnfUtils.resources + strErrMsg);
                 });
 
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, " ", link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, " ", testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
 
@@ -346,9 +329,9 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidImageLink() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, "httpfg://abc.come", link, repositoryHash,
-                        price, devTest.getParty(), repositoryNodeTest.getParty());
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, "httpfg://abc.come", testLink, testRepositoryHash,
+                        testPrice, devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
@@ -364,9 +347,9 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidRepositoryLink() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, "httpfg://abc.come", repositoryHash,
-                        price, devTest.getParty(), repositoryNodeTest.getParty());
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, "httpfg://abc.come", testRepositoryHash,
+                        testPrice, devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
@@ -385,9 +368,9 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidRepositoryHash() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, 123,
-                        price, devTest.getParty(), repositoryNodeTest.getParty());
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, 123,
+                        testPrice, devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new VnfContract.Commands.CreateVNF());
@@ -403,8 +386,8 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidAuthor() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         null, repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -421,8 +404,8 @@ public class CreateVnfContractTest {
     public void stateMustHaveValidRepositoryNode() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), null);
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -440,8 +423,8 @@ public class CreateVnfContractTest {
         ledger(ledgerServices, (ledger -> {
             final TestIdentity devTestDupe = new TestIdentity(devTest.getName(), devTest.getKeyPair());
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), devTestDupe.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -458,8 +441,8 @@ public class CreateVnfContractTest {
     public void authorMustSignTransaction() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(repositoryNodeTest.getPublicKey()),
@@ -476,8 +459,8 @@ public class CreateVnfContractTest {
     public void repositoryNodeMustSignTransaction() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
-                VnfState vnfState = new VnfState(id, name, description, serviceType, version,
-                        requirements, resources, link, link, repositoryHash, price,
+                VnfState vnfState = new VnfState(testId, testName, testDescription, testServiceType, testVersion,
+                        testRequirements, testResources, testLink, testLink, testRepositoryHash, testPrice,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(VnfContract.ID, vnfState);
                 tx.command(ImmutableList.of(devTest.getPublicKey()),
