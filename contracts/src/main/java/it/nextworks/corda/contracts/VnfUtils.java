@@ -55,7 +55,7 @@ public class VnfUtils {
             Currency.getInstance(Locale.ITALY));
 
     public static final String devX500Name         = "O=DevTest,L=Pisa,C=IT";
-    public static final String repositoryX500Name  = "O=RepositoryNodeTest,L=Pisa,C=IT";
+    public static final String repositoryX500Name  = "O=RepositoryNode,L=Pisa,C=IT";
     public static final String cordAppContractsPkg = "it.nextworks.corda.contracts";
     public static final String cordAppFinancePkg   = "net.corda.finance.contracts";
 

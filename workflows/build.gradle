@@ -52,6 +52,7 @@ dependencies {
     // Corda dependencies.
     cordaCompile "$corda_core_release_group:corda-core:$corda_core_release_version"
     cordaCompile "$corda_release_group:corda-jackson:$corda_release_version"
+    cordaCompile "$corda_core_release_group:corda-finance-contracts:$corda_core_release_version"
     cordaCompile "$corda_core_release_group:corda-finance-workflows:$corda_core_release_version"
     cordaCompile "$corda_core_release_group:corda-confidential-identities:$corda_core_release_version"
     cordaRuntime "$corda_release_group:corda:$corda_release_version"
@@ -59,6 +60,8 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contracts")
+    cordapp "$corda_release_group:corda-finance-contracts:$corda_release_version"
+    cordapp "$corda_release_group:corda-finance-workflows:$corda_release_version"
 }
 
 task integrationTest(type: Test, dependsOn: []) {

@@ -14,7 +14,7 @@ public class CreateVnfFlowUtils {
 
     public static final String notaryX500Name         = "O=Notary,L=Pisa,C=IT";
     public static final String devX500Name            = "O=DevTest,L=Pisa,C=IT";
-    public static final String repositoryX500Name     = "O=RepositoryNodeTest,L=Pisa,C=IT";
+    public static final String repositoryX500Name     = "O=RepositoryNode,L=Pisa,C=IT";
 
     public static final String testName               = "testVNF";
     public static final String testDescription        = "test";

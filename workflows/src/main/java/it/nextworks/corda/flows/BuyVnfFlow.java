@@ -25,10 +25,10 @@ import java.util.Currency;
 import java.util.List;
 
 import static it.nextworks.corda.flows.BuyVnfFlowUtils.*;
-import static it.nextworks.corda.flows.CreateVnfFlowUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 import static net.corda.core.contracts.Structures.withoutIssuer;
 import static net.corda.finance.contracts.utils.StateSumming.sumCashBy;
+import static net.corda.finance.workflows.GetBalances.getCashBalance;
 
 public class BuyVnfFlow {
 
@@ -148,6 +148,11 @@ public class BuyVnfFlow {
                     new VnfLicenseContract.Commands.BuyVNF(), ImmutableList.of(buyer.getOwningKey(),
                     repositoryNode.getOwningKey()));
             TransactionBuilder txBuilder = new TransactionBuilder(notary);
+
+            final Amount<Currency> cashBalance = getCashBalance(getServiceHub(), (Currency)price.getToken());
+            if(cashBalance.getQuantity() < price.getQuantity())
+                throw new IllegalArgumentException(missingCash);
+
             Pair<TransactionBuilder, List<PublicKey>> txKeysPair =
                     CashUtils.generateSpend(getServiceHub(), txBuilder, price, getOurIdentityAndCert(), repositoryNode);
             final TransactionBuilder tx = txKeysPair.getFirst();
@@ -177,6 +182,7 @@ public class BuyVnfFlow {
             return subFlow(new FinalityFlow(fullySignedTx, ImmutableSet.of(repositoryNodeSession)));
         }
 
+        @Suspendable
         private StateAndRef<VnfState> receiveAndValidateVnfState(FlowSession repositoryNodeSession,
                                                                  Party repositoryNode,
                                                                  Amount<Currency> price) throws FlowException {
@@ -258,7 +264,7 @@ public class BuyVnfFlow {
                  */
                 @Override
                 protected void checkTransaction(SignedTransaction stx) throws UnexpectedInvalidPriceException {
-                    if(withoutIssuer(sumCashBy(stx.getTx().getOutputStates(), getOurIdentity())) != price)
+                    if(!withoutIssuer(sumCashBy(stx.getTx().getOutputStates(), getOurIdentity())).equals(price))
                         throw new UnexpectedInvalidPriceException();
                 }
             }
