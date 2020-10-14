@@ -6,6 +6,7 @@ import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.TransactionState;
+import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.testing.node.*;
@@ -99,14 +100,18 @@ public class CreateVnfFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
+        UniqueIdentifier vnfId = ((VnfState) signedTx.getTx().getOutput(0)).getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
+            assert (recordedTx.getInputs().size() == 0);
             List<TransactionState<ContractState>> txOutputs = recordedTx.getTx().getOutputs();
             assert (txOutputs.size() == 1);
+            ContractState contractState = txOutputs.get(0).getData();
+            assert (contractState instanceof VnfState);
 
-            VnfState recordedState = (VnfState) txOutputs.get(0).getData();
-            checkStateCorrectness(recordedState);
+            VnfState recordedState = (VnfState) contractState;
+            checkStateCorrectness(recordedState, vnfId);
         }
     }
 
@@ -118,7 +123,8 @@ public class CreateVnfFlowTest {
 
         mockNetwork.runNetwork();
 
-        future.get();
+        SignedTransaction signedTx = future.get();
+        UniqueIdentifier vnfId = ((VnfState) signedTx.getTx().getOutput(0)).getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
                 List<StateAndRef<VnfState>> vnfs = node.getServices().getVaultService()
@@ -126,14 +132,15 @@ public class CreateVnfFlowTest {
                 assertEquals(vnfs.size(), 1);
 
                 VnfState recordedState = vnfs.get(0).getState().getData();
-                checkStateCorrectness(recordedState);
+                checkStateCorrectness(recordedState, vnfId);
 
                 return null;
             });
         }
     }
 
-    private void checkStateCorrectness(@NotNull VnfState recordedState) {
+    private void checkStateCorrectness(@NotNull VnfState recordedState, @NotNull UniqueIdentifier vnfId) {
+        assertEquals(recordedState.getLinearId(), vnfId);
         assertEquals(recordedState.getName(), testName);
         assertEquals(recordedState.getDescription(), testDescription);
         assertEquals(recordedState.getServiceType(), testServiceType);

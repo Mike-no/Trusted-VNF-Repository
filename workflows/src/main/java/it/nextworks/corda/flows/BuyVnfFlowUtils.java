@@ -23,9 +23,9 @@ public class BuyVnfFlowUtils {
     public static final String VERIFYING_RCV_DATA     = "Verifying the information received.";
     public static final String SENDING_VNF_INFO       = "Sending information about the required VNF.";
 
-    public static final String cordAppContractsPkg     = "it.nextworks.corda.contracts";
-    public static final String cordAppFlowsPkg         = "it.nextworks.corda.flows";
-    public static final String cordAppFinance          = "net.corda.finance.contracts";
+    public static final String cordAppContractsPkg    = "it.nextworks.corda.contracts";
+    public static final String cordAppFlowsPkg        = "it.nextworks.corda.flows";
+    public static final String cordAppFinance         = "net.corda.finance.contracts";
 
     public static final String notaryX500Name         = "O=Notary,L=Pisa,C=IT";
     public static final String devX500Name            = "O=DevTest,L=Pisa,C=IT";

@@ -75,6 +75,6 @@ public class VnfUtils {
             "be the same entity";
     public static final String mustBeSignersLicErr = "<buyer> and <repositoryNode> must be signers";
 
-    public static final String buyerX500Name       = "O=Buyer,L=Pisa,C=IT";
+    public static final String buyerX500Name       = "O=BuyerTest,L=Pisa,C=IT";
     public static final String toBeLicensed        = "toBeLicensed";
 }

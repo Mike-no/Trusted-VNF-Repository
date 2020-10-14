@@ -7,6 +7,7 @@ import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
+import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.WireTransaction;
@@ -160,6 +161,9 @@ public class BuyVnfFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
+        UniqueIdentifier vnfId =
+                signedTx.getTx().outputsOfType(VnfLicenseState.class).get(0).getVnfLicensed()
+                        .getState().getData().getLinearId();
         for(StartedMockNode node : ImmutableList.of(buyerNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -182,7 +186,7 @@ public class BuyVnfFlowTest {
 
             final VnfLicenseState vnfLicenseState = tx.outputsOfType(VnfLicenseState.class).get(0);
             final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-            checkVnfCorrectness(savedVnfState);
+            checkVnfCorrectness(savedVnfState, vnfId);
             checkLicenseCorrectness(vnfLicenseState);
         }
     }
@@ -198,7 +202,10 @@ public class BuyVnfFlowTest {
 
         mockNetwork.runNetwork();
 
-        future.get();
+        SignedTransaction signedTx = future.get();
+        UniqueIdentifier vnfId =
+                signedTx.getTx().outputsOfType(VnfLicenseState.class).get(0).getVnfLicensed()
+                        .getState().getData().getLinearId();
         for(StartedMockNode node : ImmutableList.of(buyerNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
                 List<StateAndRef<VnfLicenseState>> vnfLicenseStates = node.getServices().getVaultService()
@@ -207,7 +214,7 @@ public class BuyVnfFlowTest {
 
                 final VnfLicenseState vnfLicenseState = vnfLicenseStates.get(0).getState().getData();
                 final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-                checkVnfCorrectness(savedVnfState);
+                checkVnfCorrectness(savedVnfState, vnfId);
                 checkLicenseCorrectness(vnfLicenseState);
 
                 return null;
@@ -215,7 +222,8 @@ public class BuyVnfFlowTest {
         }
     }
 
-    private void checkVnfCorrectness(@NotNull VnfState recordedState) {
+    private void checkVnfCorrectness(@NotNull VnfState recordedState, @NotNull UniqueIdentifier vnfId) {
+        assertEquals(recordedState.getLinearId(), vnfId);
         assertEquals(recordedState.getName(), CreateVnfFlowUtils.testName);
         assertEquals(recordedState.getDescription(), CreateVnfFlowUtils.testDescription);
         assertEquals(recordedState.getServiceType(), CreateVnfFlowUtils.testServiceType);
