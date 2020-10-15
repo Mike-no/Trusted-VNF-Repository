@@ -115,17 +115,24 @@ public class DriverBasedFlowsTest {
                 checkVaultsAfterCreateVnf(devVaultUpdates, vnfVaultUpdateClass, vnfId, devHandle, repositoryHandle);
                 checkVaultsAfterCreateVnf(repositoryVnfVaultUpdates, vnfVaultUpdateClass, vnfId, devHandle, repositoryHandle);
 
+                /* Start the get vnfs flow to get the vnfId of a the vnf pkg as will be shown in the marketplace */
+                List<GetVnfsFlow.VnfInfo> vnfInfoList =
+                        buyerHandle.getRpc().startFlowDynamic(GetVnfsFlow.GetVnfInfoInitiation.class).getReturnValue().get();
+                assert (vnfInfoList.size() == 1);
+                GetVnfsFlow.VnfInfo vnfInfo = vnfInfoList.get(0);
+                UniqueIdentifier retrievedVnfId = vnfInfo.getVnfId();
+
                 /* Start the buy flow and verify that the license state has been stored in the vault of each node */
                 buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, testPrice).getReturnValue().get();
-                buyerHandle.getRpc().startFlowDynamic(BuyVnfFlow.VnfBuyerInitiation.class, vnfId, testPrice)
+                buyerHandle.getRpc().startFlowDynamic(BuyVnfFlow.VnfBuyerInitiation.class, retrievedVnfId, testPrice)
                         .getReturnValue().get();
 
                 Class<Vault.Update<VnfLicenseState>> vnfLicenseUpdateClass =
                         (Class<Vault.Update<VnfLicenseState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterBuyVnf(buyerVaultUpdates, vnfLicenseUpdateClass, vnfId, devHandle,
+                checkVaultsAfterBuyVnf(buyerVaultUpdates, vnfLicenseUpdateClass, retrievedVnfId, devHandle,
                         buyerHandle, repositoryHandle);
-                checkVaultsAfterBuyVnf(repositoryLicenseVaultUpdates, vnfLicenseUpdateClass, vnfId, devHandle,
+                checkVaultsAfterBuyVnf(repositoryLicenseVaultUpdates, vnfLicenseUpdateClass, retrievedVnfId, devHandle,
                         buyerHandle, repositoryHandle);
             } catch(Exception e) {
                 throw new RuntimeException(integrationTestEx, e);
