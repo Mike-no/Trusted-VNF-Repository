@@ -1,4 +1,4 @@
-package com.template.webserver;
+package it.nextworks.corda.webserver;
 
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;
@@ -12,26 +12,26 @@ import javax.annotation.PreDestroy;
 
 /**
  * Wraps an RPC connection to a Corda node.
- *
- * The RPC connection is configured using command line arguments.
+ * The RPC connection is configured using command line arguments:
+ * - The host of the node we are connecting to
+ * - The RPC port of the node we are connecting to
+ * - The username for logging into the RPC client
+ * - The password for logging into the RPC client
  */
 @Component
 public class NodeRPCConnection implements AutoCloseable {
-    // The host of the node we are connecting to.
+
     @Value("${config.rpc.host}")
     private String host;
-    // The RPC port of the node we are connecting to.
     @Value("${config.rpc.username}")
     private String username;
-    // The username for logging into the RPC client.
     @Value("${config.rpc.password}")
     private String password;
-    // The password for logging into the RPC client.
     @Value("${config.rpc.port}")
     private int rpcPort;
 
     private CordaRPCConnection rpcConnection;
-    CordaRPCOps proxy;
+    private CordaRPCOps proxy;
 
     @PostConstruct
     public void initialiseNodeRPCConnection() {
@@ -41,8 +41,9 @@ public class NodeRPCConnection implements AutoCloseable {
         proxy = rpcConnection.getProxy();
     }
 
+    public CordaRPCOps getProxy() { return proxy; }
+
     @PreDestroy
-    public void close() {
-        rpcConnection.notifyServerAndClose();
-    }
+    @Override
+    public void close () throws Exception { rpcConnection.notifyServerAndClose(); }
 }

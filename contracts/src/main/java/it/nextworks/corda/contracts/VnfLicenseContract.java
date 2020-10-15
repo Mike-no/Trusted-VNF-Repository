@@ -86,6 +86,7 @@ public class VnfLicenseContract implements Contract {
                 require.using(VnfUtils.repositoryNode + cannotDiffer,
                         repositoryNode.equals(vnfStateRepositoryNode));
                 require.using(buyerSameIdentity, !buyer.equals(repositoryNode));
+                require.using(buyerAndAuthorSame, !buyer.equals(vnfState.getAuthor()));
 
                 final List<PublicKey> requiredSigners = command.getSigners();
                 require.using(twoSignersErr, requiredSigners.size() == 2);

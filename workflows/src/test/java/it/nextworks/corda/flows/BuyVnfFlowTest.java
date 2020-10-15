@@ -35,7 +35,7 @@ public class BuyVnfFlowTest {
     private StartedMockNode buyerNodeTest;
     private StartedMockNode repositoryNodeTest;
 
-    /** Build a mock network composed by a developer Node, the repository Node and a Notary */
+    /** Build a mock network composed by a developer Node, a buyer Node and the repository Node and a Notary */
     @Before
     public void setup() {
         mockNetwork = new MockNetwork(new MockNetworkParameters(
@@ -161,9 +161,6 @@ public class BuyVnfFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier vnfId =
-                signedTx.getTx().outputsOfType(VnfLicenseState.class).get(0).getVnfLicensed()
-                        .getState().getData().getLinearId();
         for(StartedMockNode node : ImmutableList.of(buyerNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -186,7 +183,7 @@ public class BuyVnfFlowTest {
 
             final VnfLicenseState vnfLicenseState = tx.outputsOfType(VnfLicenseState.class).get(0);
             final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-            checkVnfCorrectness(savedVnfState, vnfId);
+            checkVnfCorrectness(savedVnfState, vnfState.getLinearId());
             checkLicenseCorrectness(vnfLicenseState);
         }
     }
@@ -202,10 +199,7 @@ public class BuyVnfFlowTest {
 
         mockNetwork.runNetwork();
 
-        SignedTransaction signedTx = future.get();
-        UniqueIdentifier vnfId =
-                signedTx.getTx().outputsOfType(VnfLicenseState.class).get(0).getVnfLicensed()
-                        .getState().getData().getLinearId();
+        future.get();
         for(StartedMockNode node : ImmutableList.of(buyerNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
                 List<StateAndRef<VnfLicenseState>> vnfLicenseStates = node.getServices().getVaultService()
@@ -214,7 +208,7 @@ public class BuyVnfFlowTest {
 
                 final VnfLicenseState vnfLicenseState = vnfLicenseStates.get(0).getState().getData();
                 final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-                checkVnfCorrectness(savedVnfState, vnfId);
+                checkVnfCorrectness(savedVnfState, vnfState.getLinearId());
                 checkLicenseCorrectness(vnfLicenseState);
 
                 return null;

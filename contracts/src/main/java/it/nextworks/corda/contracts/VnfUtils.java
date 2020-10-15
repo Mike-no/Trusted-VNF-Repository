@@ -73,6 +73,8 @@ public class VnfUtils {
             "differs from the vnf price";
     public static final String buyerSameIdentity   = "The <buyer> parameter and the <repositoryNode> parameter cannot " +
             "be the same entity";
+    public static final String buyerAndAuthorSame  = "The <buyer> parameter and the <author> parameter cannot " +
+            "be the same entity";
     public static final String mustBeSignersLicErr = "<buyer> and <repositoryNode> must be signers";
 
     public static final String buyerX500Name       = "O=BuyerTest,L=Pisa,C=IT";

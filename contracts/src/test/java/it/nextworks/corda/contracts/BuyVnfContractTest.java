@@ -313,6 +313,37 @@ public class BuyVnfContractTest {
         }));
     }
 
+    /** Test that the <buyer> parameter must not be equal the <author> parameter */
+    @Test
+    public void buyerIsNotAuthor() {
+        ledger(ledgerServices, (ledger -> {
+            ledger.transaction(tx -> {
+                generateVnfState(tx);
+                return tx.verifies();
+            });
+
+            ledger.transaction(tx -> {
+                Cash.State inputCash = createCashState(devTest.getParty(), new Amount<>(1,
+                        Currency.getInstance(Locale.ITALY)));
+                tx.input(Cash.class.getName(), inputCash);
+
+                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+
+                StateAndRef<VnfState> vnfLicensed = ledger.retrieveOutputStateAndRef(VnfState.class, toBeLicensed);
+                VnfState vnf = vnfLicensed.getState().getData();
+                tx.output(VnfLicenseContract.ID, new VnfLicenseState(vnfLicensed, vnf.getRepositoryLink(),
+                        vnf.getRepositoryHash(), devTest.getParty(), repositoryNodeTest.getParty()));
+
+                tx.command(devTest.getPublicKey(), new Cash.Commands.Move());
+                tx.command(ImmutableList.of(repositoryNodeTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
+                        new VnfLicenseContract.Commands.BuyVNF());
+
+                return tx.failsWith(buyerAndAuthorSame);
+            });
+            return null;
+        }));
+    }
+
     /** Test that the <buyer> must sign the transaction */
     @Test
     public void buyerMustSignTransaction() {
