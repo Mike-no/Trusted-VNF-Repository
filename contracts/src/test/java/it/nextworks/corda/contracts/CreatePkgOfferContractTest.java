@@ -11,7 +11,7 @@ import static it.nextworks.corda.contracts.PkgOfferUtils.*;
 import static net.corda.testing.node.NodeTestUtils.ledger;
 
 /** Test PkgOfferContract class in cases where the command used in the transaction is RegisterPkg */
-public class RegisterPkgContractTest {
+public class CreatePkgOfferContractTest {
 
     /** Simulate a Corda Network composed by two nodes: a developer and the repositoryNode */
     private static final TestIdentity devTest =
@@ -248,7 +248,6 @@ public class RegisterPkgContractTest {
         }));
     }
 
-    /** Test that the <price> parameter of the output state of a transaction must not be null */
     @Test
     public void stateMustHaveValidPrice() {
         ledger(ledgerServices, (ledger -> {
@@ -266,7 +265,6 @@ public class RegisterPkgContractTest {
         }));
     }
 
-    /** Test that the <pkgType> parameter of the output state of a transaction must not be null */
     @Test
     public void stateMustHaveValidPkgType() {
         ledger(ledgerServices, (ledger -> {
