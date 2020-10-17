@@ -1,7 +1,8 @@
 package it.nextworks.corda.flows;
 
 import com.google.common.collect.ImmutableList;
-import it.nextworks.corda.states.VnfState;
+import it.nextworks.corda.contracts.PkgOfferUtils;
+import it.nextworks.corda.states.PkgOfferState;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
@@ -17,12 +18,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import javax.annotation.Signed;
 import java.util.List;
 
-import static it.nextworks.corda.flows.CreateVnfFlowUtils.*;
+import static it.nextworks.corda.flows.CreatePkgFlowUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CreateVnfFlowTest {
+public class CreatePkgFlowTest {
 
     private MockNetwork mockNetwork;
     private StartedMockNode devNodeTest;
@@ -40,7 +42,7 @@ public class CreateVnfFlowTest {
         devNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(devX500Name));
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
 
-        repositoryNodeTest.registerInitiatedFlow(CreateVnfFlow.RepositoryNodeAcceptor.class);
+        repositoryNodeTest.registerInitiatedFlow(CreatePkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -53,10 +55,15 @@ public class CreateVnfFlowTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    private CreatePkgFlow.DevInitiation createFlow() {
+        return new CreatePkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
+                PkgOfferUtils.testPkgType);
+    }
+
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
-                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
+        CreatePkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -67,8 +74,7 @@ public class CreateVnfFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
-                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
+        CreatePkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -79,8 +85,7 @@ public class CreateVnfFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
-                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
+        CreatePkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -92,15 +97,14 @@ public class CreateVnfFlowTest {
     }
 
     @Test
-    public void recordedTransactionHasNoInputsAndASingleOutputVnf() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
-                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
+    public void recordedTransactionHasNoInputsAndASingleOutputPkg() throws Exception {
+        CreatePkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier vnfId = ((VnfState) signedTx.getTx().getOutput(0)).getLinearId();
+        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -108,49 +112,45 @@ public class CreateVnfFlowTest {
             List<TransactionState<ContractState>> txOutputs = recordedTx.getTx().getOutputs();
             assert (txOutputs.size() == 1);
             ContractState contractState = txOutputs.get(0).getData();
-            assert (contractState instanceof VnfState);
+            assert (contractState instanceof PkgOfferState);
 
-            VnfState recordedState = (VnfState) contractState;
-            checkStateCorrectness(recordedState, vnfId);
+            PkgOfferState recordedState = (PkgOfferState) contractState;
+            checkPkgOfferStateCorrectness(recordedState, pkgId);
         }
     }
 
     @Test
-    public void flowRecordsTheCorrectVnfInBothPartiesVaults() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(testName, testDescription, testServiceType,
-                testVersion, testRequirements, testResources, testLink, testLink, testPrice);
+    public void flowRecordsTheCorrectPkgInBothPartiesVaults() throws Exception {
+        CreatePkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier vnfId = ((VnfState) signedTx.getTx().getOutput(0)).getLinearId();
+        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
-                List<StateAndRef<VnfState>> vnfs = node.getServices().getVaultService()
-                        .queryBy(VnfState.class).getStates();
-                assertEquals(vnfs.size(), 1);
+                List<StateAndRef<PkgOfferState>> pkgs = node.getServices().getVaultService()
+                        .queryBy(PkgOfferState.class).getStates();
+                assertEquals(pkgs.size(), 1);
 
-                VnfState recordedState = vnfs.get(0).getState().getData();
-                checkStateCorrectness(recordedState, vnfId);
+                PkgOfferState recordedState = pkgs.get(0).getState().getData();
+                checkPkgOfferStateCorrectness(recordedState, pkgId);
 
                 return null;
             });
         }
     }
 
-    private void checkStateCorrectness(@NotNull VnfState recordedState, @NotNull UniqueIdentifier vnfId) {
-        assertEquals(recordedState.getLinearId(), vnfId);
-        assertEquals(recordedState.getName(), testName);
-        assertEquals(recordedState.getDescription(), testDescription);
-        assertEquals(recordedState.getServiceType(), testServiceType);
-        assertEquals(recordedState.getVersion(), testVersion);
-        assertEquals(recordedState.getRequirements(), testRequirements);
-        assertEquals(recordedState.getResources(), testResources);
-        assertEquals(recordedState.getImageLink(), testLink);
-        assertEquals(recordedState.getRepositoryLink(), testLink);
-        assertEquals(recordedState.getRepositoryHash(), testLink.hashCode());
-        assertEquals(recordedState.getPrice(), testPrice);
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
+        assertEquals(recordedState.getLinearId(), pkgId);
+        assertEquals(recordedState.getName(), PkgOfferUtils.testName);
+        assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
+        assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
+        assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
+        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
     }

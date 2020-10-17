@@ -2,8 +2,9 @@ package it.nextworks.corda.flows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import it.nextworks.corda.states.VnfLicenseState;
-import it.nextworks.corda.states.VnfState;
+import it.nextworks.corda.contracts.PkgOfferUtils;
+import it.nextworks.corda.states.PkgLicenseState;
+import it.nextworks.corda.states.PkgOfferState;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
@@ -22,12 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import rx.Observable;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static it.nextworks.corda.flows.BuyVnfFlowUtils.buyerX500Name;
-import static it.nextworks.corda.flows.BuyVnfFlowUtils.cordAppFinance;
-import static it.nextworks.corda.flows.CreateVnfFlowUtils.*;
+import static it.nextworks.corda.flows.DriverBasedFlowsTestUtils.*;
 import static net.corda.testing.core.ExpectKt.expect;
 import static net.corda.testing.core.ExpectKt.expectEvents;
 import static net.corda.testing.driver.Driver.driver;
@@ -56,7 +54,7 @@ public class DriverBasedFlowsTest {
                         TestCordapp.findCordapp(cordAppFinance)))
                 .withNotarySpecs(ImmutableList.of(
                         new NotarySpec(CordaX500Name.parse(notaryX500Name),
-                                true, Arrays.asList(notaryUser), VerifierType.InMemory, null))), dsl -> {
+                                true, ImmutableList.of(notaryUser), VerifierType.InMemory, null))), dsl -> {
             List<CordaFuture<NodeHandle>> handleFutures = ImmutableList.of(
                     dsl.startNode(new NodeParameters().withProvidedName(CordaX500Name.parse(devX500Name))),
                     dsl.startNode(new NodeParameters().withProvidedName(CordaX500Name.parse(repositoryX500Name))),
@@ -93,46 +91,48 @@ public class DriverBasedFlowsTest {
                  * Register the observer objects to track the dev's vault and the repository's vault
                  * Register the observer objects to track the buyer's vault and the repository's vault
                  */
-                Observable<Vault.Update<VnfState>> devVaultUpdates =
-                        devHandle.getRpc().vaultTrack(VnfState.class).getUpdates();
-                Observable<Vault.Update<VnfState>> repositoryVnfVaultUpdates =
-                        repositoryHandle.getRpc().vaultTrack(VnfState.class).getUpdates();
-                Observable<Vault.Update<VnfLicenseState>> buyerVaultUpdates =
-                        buyerHandle.getRpc().vaultTrack(VnfLicenseState.class).getUpdates();
-                Observable<Vault.Update<VnfLicenseState>> repositoryLicenseVaultUpdates =
-                        repositoryHandle.getRpc().vaultTrack(VnfLicenseState.class).getUpdates();
+                Observable<Vault.Update<PkgOfferState>> devVaultUpdates =
+                        devHandle.getRpc().vaultTrack(PkgOfferState.class).getUpdates();
+                Observable<Vault.Update<PkgOfferState>> repositoryPkgVaultUpdates =
+                        repositoryHandle.getRpc().vaultTrack(PkgOfferState.class).getUpdates();
+                Observable<Vault.Update<PkgLicenseState>> buyerVaultUpdates =
+                        buyerHandle.getRpc().vaultTrack(PkgLicenseState.class).getUpdates();
+                Observable<Vault.Update<PkgLicenseState>> repositoryLicenseVaultUpdates =
+                        repositoryHandle.getRpc().vaultTrack(PkgLicenseState.class).getUpdates();
 
-                /* Start the creation flow and verify that the vnf state has been stored in the vault of each node */
+                /* Start the creation flow and verify that the pkg state has been stored in the vault of each node */
                 SignedTransaction signedTransaction =
-                        devHandle.getRpc().startFlowDynamic(CreateVnfFlow.DevInitiation.class,
-                        testName, testDescription, testServiceType, testVersion, testRequirements,
-                        testResources, testLink, testLink, testPrice).getReturnValue().get();
-                UniqueIdentifier vnfId = ((VnfState)signedTransaction.getTx().getOutput(0)).getLinearId();
+                        devHandle.getRpc().startFlowDynamic(CreatePkgFlow.DevInitiation.class,
+                            PkgOfferUtils.testName, PkgOfferUtils.testDescription, PkgOfferUtils.testVersion,
+                            PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
+                            PkgOfferUtils.testPkgType).getReturnValue().get();
+                UniqueIdentifier pkgId = ((PkgOfferState)signedTransaction.getTx().getOutput(0)).getLinearId();
 
-                Class<Vault.Update<VnfState>> vnfVaultUpdateClass =
-                        (Class<Vault.Update<VnfState>>)(Class<?>)Vault.Update.class;
+                Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass =
+                        (Class<Vault.Update<PkgOfferState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterCreateVnf(devVaultUpdates, vnfVaultUpdateClass, vnfId, devHandle, repositoryHandle);
-                checkVaultsAfterCreateVnf(repositoryVnfVaultUpdates, vnfVaultUpdateClass, vnfId, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(devVaultUpdates, pkgVaultUpdateClass, pkgId, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(repositoryPkgVaultUpdates, pkgVaultUpdateClass, pkgId, devHandle, repositoryHandle);
 
-                /* Start the get vnfs flow to get the vnfId of a the vnf pkg as will be shown in the marketplace */
-                List<GetVnfsFlow.VnfInfo> vnfInfoList =
-                        buyerHandle.getRpc().startFlowDynamic(GetVnfsFlow.GetVnfInfoInitiation.class).getReturnValue().get();
-                assert (vnfInfoList.size() == 1);
-                GetVnfsFlow.VnfInfo vnfInfo = vnfInfoList.get(0);
-                UniqueIdentifier retrievedVnfId = vnfInfo.getVnfId();
+                /* Start the get pkgs flow to get the pkgId of a the pkg as will be shown in the marketplace */
+                List<PkgOfferState> pkgOfferStateList =
+                        buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class).getReturnValue().get();
+                assert (pkgOfferStateList.size() == 1);
+                PkgOfferState pkgOfferState = pkgOfferStateList.get(0);
+                UniqueIdentifier retrievedPkgId = pkgOfferState.getLinearId();
 
                 /* Start the buy flow and verify that the license state has been stored in the vault of each node */
-                buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, testPrice).getReturnValue().get();
-                buyerHandle.getRpc().startFlowDynamic(BuyVnfFlow.VnfBuyerInitiation.class, retrievedVnfId, testPrice)
+                buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, PkgOfferUtils.testPrice)
                         .getReturnValue().get();
+                buyerHandle.getRpc().startFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class, retrievedPkgId,
+                        PkgOfferUtils.testPrice).getReturnValue().get();
 
-                Class<Vault.Update<VnfLicenseState>> vnfLicenseUpdateClass =
-                        (Class<Vault.Update<VnfLicenseState>>)(Class<?>)Vault.Update.class;
+                Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass =
+                        (Class<Vault.Update<PkgLicenseState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterBuyVnf(buyerVaultUpdates, vnfLicenseUpdateClass, retrievedVnfId, devHandle,
+                checkVaultsAfterBuyPkg(buyerVaultUpdates, pkgLicenseUpdateClass, pkgId, devHandle,
                         buyerHandle, repositoryHandle);
-                checkVaultsAfterBuyVnf(repositoryLicenseVaultUpdates, vnfLicenseUpdateClass, retrievedVnfId, devHandle,
+                checkVaultsAfterBuyPkg(repositoryLicenseVaultUpdates, pkgLicenseUpdateClass, pkgId, devHandle,
                         buyerHandle, repositoryHandle);
             } catch(Exception e) {
                 throw new RuntimeException(integrationTestEx, e);
@@ -142,14 +142,16 @@ public class DriverBasedFlowsTest {
         });
     }
 
-    private void checkVaultsAfterCreateVnf(@NotNull Observable<Vault.Update<VnfState>> observer,
-                                           @NotNull Class<Vault.Update<VnfState>> vnfVaultUpdateClass,
-                                           @NotNull UniqueIdentifier vnfId, @NotNull NodeHandle devHandle,
+    private void checkVaultsAfterCreatePkg(@NotNull Observable<Vault.Update<PkgOfferState>> observer,
+                                           @NotNull Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass,
+                                           @NotNull UniqueIdentifier pkgId,
+                                           @NotNull NodeHandle devHandle,
                                            @NotNull NodeHandle repositoryHandle) {
         expectEvents(observer, true, () ->
-                expect(vnfVaultUpdateClass, update -> true, update -> {
-                    VnfState recordedState = update.getProduced().iterator().next().getState().getData();
-                    checkVnfCorrectness(recordedState, vnfId, devHandle.getNodeInfo().getLegalIdentities().get(0),
+                expect(pkgVaultUpdateClass, update -> true, update -> {
+                    PkgOfferState recordedState = update.getProduced().iterator().next().getState().getData();
+                    checkPkgOfferStateCorrectness(recordedState, pkgId,
+                            devHandle.getNodeInfo().getLegalIdentities().get(0),
                             repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
 
                     return null;
@@ -157,46 +159,39 @@ public class DriverBasedFlowsTest {
         );
     }
 
-    private void checkVaultsAfterBuyVnf(@NotNull Observable<Vault.Update<VnfLicenseState>> observer,
-                                        @NotNull Class<Vault.Update<VnfLicenseState>> vnfLicenseUpdateClass,
-                                        @NotNull UniqueIdentifier vnfId, @NotNull NodeHandle devHandle,
-                                        @NotNull NodeHandle buyerHandle, @NotNull NodeHandle repositoryHandle) {
+    private void checkVaultsAfterBuyPkg(@NotNull Observable<Vault.Update<PkgLicenseState>> observer,
+                                        @NotNull Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass,
+                                        @NotNull UniqueIdentifier pkgId,
+                                        @NotNull NodeHandle devHandle,
+                                        @NotNull NodeHandle buyerHandle,
+                                        @NotNull NodeHandle repositoryHandle) {
         expectEvents(observer, true, () ->
-                expect(vnfLicenseUpdateClass, update -> true, update -> {
-                    VnfLicenseState recordedState = update.getProduced().iterator().next().getState().getData();
-                    VnfState vnfState = recordedState.getVnfLicensed().getState().getData();
-                    checkVnfCorrectness(vnfState, vnfId, devHandle.getNodeInfo().getLegalIdentities().get(0),
+                expect(pkgLicenseUpdateClass, update -> true, update -> {
+                    PkgLicenseState recordedState = update.getProduced().iterator().next().getState().getData();
+                    PkgOfferState pkgOfferState = recordedState.getPkgLicensed().getState().getData();
+                    checkPkgOfferStateCorrectness(pkgOfferState, pkgId,
+                            devHandle.getNodeInfo().getLegalIdentities().get(0),
                             repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
-                    checkLicenseCorrectness(recordedState, buyerHandle.getNodeInfo().getLegalIdentities().get(0),
-                            repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
+                    assertEquals(recordedState.getBuyer(), buyerHandle.getNodeInfo().getLegalIdentities().get(0));
 
                     return null;
                 })
         );
     }
 
-    private void checkVnfCorrectness(@NotNull VnfState recordedState, @NotNull UniqueIdentifier vnfId,
-                                       @NotNull Party author, @NotNull Party repositoryNode) {
-        assertEquals(recordedState.getLinearId(), vnfId);
-        assertEquals(recordedState.getName(), testName);
-        assertEquals(recordedState.getDescription(), testDescription);
-        assertEquals(recordedState.getServiceType(), testServiceType);
-        assertEquals(recordedState.getVersion(), testVersion);
-        assertEquals(recordedState.getRequirements(), testRequirements);
-        assertEquals(recordedState.getResources(), testResources);
-        assertEquals(recordedState.getImageLink(), testLink);
-        assertEquals(recordedState.getRepositoryLink(), testLink);
-        assertEquals(recordedState.getRepositoryHash(), testLink.hashCode());
-        assertEquals(recordedState.getPrice(), testPrice);
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState,
+                                               @NotNull UniqueIdentifier pkgId,
+                                               @NotNull Party author,
+                                               @NotNull Party repositoryNode) {
+        assertEquals(recordedState.getLinearId(), pkgId);
+        assertEquals(recordedState.getName(), PkgOfferUtils.testName);
+        assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
+        assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
+        assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
+        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), author);
-        assertEquals(recordedState.getRepositoryNode(), repositoryNode);
-    }
-
-    private void checkLicenseCorrectness(@NotNull VnfLicenseState recordedState, @NotNull Party buyer,
-                                         @NotNull Party repositoryNode) {
-        assertEquals(recordedState.getRepositoryLink(), CreateVnfFlowUtils.testLink);
-        assertEquals(recordedState.getRepositoryHash(), CreateVnfFlowUtils.testLink.hashCode());
-        assertEquals(recordedState.getBuyer(), buyer);
         assertEquals(recordedState.getRepositoryNode(), repositoryNode);
     }
 }

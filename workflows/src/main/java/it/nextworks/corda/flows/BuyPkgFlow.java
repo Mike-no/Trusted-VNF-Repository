@@ -3,9 +3,9 @@ package it.nextworks.corda.flows;
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import it.nextworks.corda.contracts.VnfLicenseContract;
-import it.nextworks.corda.states.VnfLicenseState;
-import it.nextworks.corda.states.VnfState;
+import it.nextworks.corda.contracts.PkgLicenseContract;
+import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.PkgLicenseState;
 import kotlin.Pair;
 import net.corda.core.contracts.*;
 import net.corda.core.crypto.SecureHash;
@@ -24,21 +24,21 @@ import java.security.PublicKey;
 import java.util.Currency;
 import java.util.List;
 
-import static it.nextworks.corda.flows.BuyVnfFlowUtils.*;
+import static it.nextworks.corda.flows.BuyPkgFlowUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 import static net.corda.core.contracts.Structures.withoutIssuer;
 import static net.corda.finance.contracts.utils.StateSumming.sumCashBy;
 import static net.corda.finance.workflows.GetBalances.getCashBalance;
 
-public class BuyVnfFlow {
+public class BuyPkgFlow {
 
     /**
      * This exception will be thrown if the UniqueIdentifier specified
-     * does not correspond to a VNF stored in the repository node.
+     * does not correspond to a package stored in the repository node.
      */
-    public static class NonExistentVnfException extends FlowException {
-        public NonExistentVnfException(UniqueIdentifier vnfId) {
-            super(nonExistentVnf + vnfId);
+    public static class NonExistentPkgException extends FlowException {
+        public NonExistentPkgException(UniqueIdentifier pkgId) {
+            super(nonExistentPkg + pkgId);
         }
     }
 
@@ -54,24 +54,24 @@ public class BuyVnfFlow {
 
     @InitiatingFlow
     @StartableByRPC
-    public static class VnfBuyerInitiation extends FlowLogic<SignedTransaction> {
+    public static class PkgBuyerInitiation extends FlowLogic<SignedTransaction> {
 
-        private final UniqueIdentifier vnfId;
+        private final UniqueIdentifier pkgId;
         private final Amount<Currency> price;
 
-        private final Step SENDING_VNF_ID         = new Step(BuyVnfFlowUtils.SENDING_VNF_ID);
-        private final Step RECEIVING_VNF_INFO     = new Step(BuyVnfFlowUtils.RECEIVING_VNF_INFO);
-        private final Step VERIFYING_VNF_INFO     = new Step(BuyVnfFlowUtils.VERIFYING_VNF_INFO);
-        private final Step GENERATING_TRANSACTION = new Step(BuyVnfFlowUtils.GENERATING_TRANSACTION);
-        private final Step VERIFYING_TRANSACTION  = new Step(BuyVnfFlowUtils.VERIFYING_TRANSACTION);
-        private final Step SIGNING_TRANSACTION    = new Step(BuyVnfFlowUtils.SIGNING_TRANSACTION);
-        private final Step GATHERING_SIGNS        = new Step(BuyVnfFlowUtils.GATHERING_SIGNS){
+        private final Step SENDING_PKG_ID         = new Step(BuyPkgFlowUtils.SENDING_PKG_ID);
+        private final Step RECEIVING_PKG_INFO     = new Step(BuyPkgFlowUtils.RECEIVING_PKG_INFO);
+        private final Step VERIFYING_PKG_INFO     = new Step(BuyPkgFlowUtils.VERIFYING_PKG_INFO);
+        private final Step GENERATING_TRANSACTION = new Step(BuyPkgFlowUtils.GENERATING_TRANSACTION);
+        private final Step VERIFYING_TRANSACTION  = new Step(BuyPkgFlowUtils.VERIFYING_TRANSACTION);
+        private final Step SIGNING_TRANSACTION    = new Step(BuyPkgFlowUtils.SIGNING_TRANSACTION);
+        private final Step GATHERING_SIGNS        = new Step(BuyPkgFlowUtils.GATHERING_SIGNS){
             @Override
             public ProgressTracker childProgressTracker() {
                 return CollectSignaturesFlow.Companion.tracker();
             }
         };
-        private final Step FINALISING_TRANSACTION = new Step(BuyVnfFlowUtils.FINALISING_TRANSACTION) {
+        private final Step FINALISING_TRANSACTION = new Step(BuyPkgFlowUtils.FINALISING_TRANSACTION) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return FinalityFlow.Companion.tracker();
@@ -84,9 +84,9 @@ public class BuyVnfFlow {
          * function.
          */
         private final ProgressTracker progressTracker = new ProgressTracker(
-                SENDING_VNF_ID,
-                RECEIVING_VNF_INFO,
-                VERIFYING_VNF_INFO,
+                SENDING_PKG_ID,
+                RECEIVING_PKG_INFO,
+                VERIFYING_PKG_INFO,
                 GENERATING_TRANSACTION,
                 VERIFYING_TRANSACTION,
                 SIGNING_TRANSACTION,
@@ -97,10 +97,10 @@ public class BuyVnfFlow {
         /**
          * Constructor of the Initiating flow class,
          * the following parameters will be used to build the transaction
-         * @param vnfId ID of the VNF to buy
+         * @param pkgId ID of the package to buy
          */
-        public VnfBuyerInitiation(UniqueIdentifier vnfId, Amount<Currency> price) {
-            this.vnfId = vnfId;
+        public PkgBuyerInitiation(UniqueIdentifier pkgId, Amount<Currency> price) {
+            this.pkgId = pkgId;
             this.price = price;
         }
 
@@ -126,26 +126,24 @@ public class BuyVnfFlow {
                     .getNetworkMapCache()
                     .getPeerByLegalName(CordaX500Name.parse(repositoryX500Name));
 
-            /* Set the current step to SENDING_VNF_ID and proceed to send the VNF ID */
-            progressTracker.setCurrentStep(SENDING_VNF_ID);
+            /* Set the current step to SENDING_PKG_ID and proceed to send the package ID */
+            progressTracker.setCurrentStep(SENDING_PKG_ID);
 
             FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
-            repositoryNodeSession.send(vnfId);
+            repositoryNodeSession.send(pkgId);
 
-            /* Set the current step to RECEIVING_VNF_INFO and proceed to retrieve the VNF info */
-            progressTracker.setCurrentStep(RECEIVING_VNF_INFO);
+            /* Set the current step to RECEIVING_PKG_INFO and proceed to retrieve the package info */
+            progressTracker.setCurrentStep(RECEIVING_PKG_INFO);
 
-            final StateAndRef<VnfState> vnfStateAndRef = receiveAndValidateVnfState(repositoryNodeSession,
+            final StateAndRef<PkgOfferState> pkgStateAndRef = receiveAndValidatePkgState(repositoryNodeSession,
                     repositoryNode, price);
-            final VnfState vnfState = vnfStateAndRef.getState().getData();
 
             /* Set the current step to GENERATING_TRANSACTION and proceed to build the latter */
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
-            final VnfLicenseState vnfLicenseState = new VnfLicenseState(vnfStateAndRef, vnfState.getRepositoryLink(),
-                    vnfState.getRepositoryHash(), buyer, repositoryNode);
-            final Command<VnfLicenseContract.Commands.BuyVNF> txCommand = new Command<>(
-                    new VnfLicenseContract.Commands.BuyVNF(), ImmutableList.of(buyer.getOwningKey(),
+            final PkgLicenseState pkgLicenseState = new PkgLicenseState(pkgStateAndRef, buyer);
+            final Command<PkgLicenseContract.Commands.BuyPkg> txCommand = new Command<>(
+                    new PkgLicenseContract.Commands.BuyPkg(), ImmutableList.of(buyer.getOwningKey(),
                     repositoryNode.getOwningKey()));
             TransactionBuilder txBuilder = new TransactionBuilder(notary);
 
@@ -156,7 +154,7 @@ public class BuyVnfFlow {
             Pair<TransactionBuilder, List<PublicKey>> txKeysPair =
                     CashUtils.generateSpend(getServiceHub(), txBuilder, price, getOurIdentityAndCert(), repositoryNode);
             final TransactionBuilder tx = txKeysPair.getFirst();
-            tx.addOutputState(vnfLicenseState, VnfLicenseContract.ID).addCommand(txCommand);
+            tx.addOutputState(pkgLicenseState, PkgLicenseContract.ID).addCommand(txCommand);
 
             /* Set the current step to VERIFYING_TRANSACTION and proceed to call the verify function */
             progressTracker.setCurrentStep(VERIFYING_TRANSACTION);
@@ -183,37 +181,37 @@ public class BuyVnfFlow {
         }
 
         @Suspendable
-        private StateAndRef<VnfState> receiveAndValidateVnfState(FlowSession repositoryNodeSession,
-                                                                 Party repositoryNode,
-                                                                 Amount<Currency> price) throws FlowException {
-            /* Retrieve the VNF info and verify that a single VnfState has been received */
-            final List<StateAndRef<VnfState>> receivedObjects =
+        private StateAndRef<PkgOfferState> receiveAndValidatePkgState(FlowSession repositoryNodeSession,
+                                                                      Party repositoryNode,
+                                                                      Amount<Currency> price) throws FlowException {
+            /* Retrieve the package info and verify that a single PkgOfferState has been received */
+            final List<StateAndRef<PkgOfferState>> receivedObjects =
                     subFlow(new ReceiveStateAndRefFlow<>(repositoryNodeSession));
 
-            /* Set the current step to VERIFYING_VNF_INFO and proceed to verify the received VnfState */
-            progressTracker.setCurrentStep(VERIFYING_VNF_INFO);
+            /* Set the current step to VERIFYING_PKG_INFO and proceed to verify the received PkgOfferState */
+            progressTracker.setCurrentStep(VERIFYING_PKG_INFO);
 
             return requireThat(require -> {
                 require.using(receivedTooMuchStates, receivedObjects.size() == 1);
-                final StateAndRef<VnfState> vnfStateAndRef = receivedObjects.get(0);
-                final VnfState vnfState = vnfStateAndRef.getState().getData();
-                require.using(requestedVnfErr, vnfId.equals(vnfState.getLinearId()));
-                require.using(priceMismatch, price.equals(vnfState.getPrice()));
-                require.using(repositoryNodeMismatch, repositoryNode.equals(vnfState.getRepositoryNode()));
-                return vnfStateAndRef;
+                final StateAndRef<PkgOfferState> pkgStateAndRef = receivedObjects.get(0);
+                final PkgOfferState pkgOfferState = pkgStateAndRef.getState().getData();
+                require.using(requestedPkgErr, pkgId.equals(pkgOfferState.getLinearId()));
+                require.using(priceMismatch, price.equals(pkgOfferState.getPrice()));
+                require.using(repositoryNodeMismatch, repositoryNode.equals(pkgOfferState.getRepositoryNode()));
+                return pkgStateAndRef;
             });
         }
     }
 
-    @InitiatedBy(BuyVnfFlow.VnfBuyerInitiation.class)
+    @InitiatedBy(PkgBuyerInitiation.class)
     public static class RepositoryNodeAcceptor extends FlowLogic<SignedTransaction> {
 
         private final FlowSession buyerSession;
 
-        private final Step AWAITING_VNF_ID        = new Step(BuyVnfFlowUtils.AWAITING_VNF_ID);
-        private final Step VERIFYING_RCV_DATA     = new Step(BuyVnfFlowUtils.VERIFYING_RCV_DATA);
-        private final Step SENDING_VNF_INFO       = new Step(BuyVnfFlowUtils.SENDING_VNF_INFO);
-        private final Step FINALISING_TRANSACTION = new Step(BuyVnfFlowUtils.FINALISING_TRANSACTION) {
+        private final Step AWAITING_PKG_ID        = new Step(BuyPkgFlowUtils.AWAITING_PKG_ID);
+        private final Step VERIFYING_RCV_DATA     = new Step(BuyPkgFlowUtils.VERIFYING_RCV_DATA);
+        private final Step SENDING_PKG_INFO       = new Step(BuyPkgFlowUtils.SENDING_PKG_INFO);
+        private final Step FINALISING_TRANSACTION = new Step(BuyPkgFlowUtils.FINALISING_TRANSACTION) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return FinalityFlow.Companion.tracker();
@@ -226,15 +224,15 @@ public class BuyVnfFlow {
          * function.
          */
         private final ProgressTracker progressTracker = new ProgressTracker(
-                AWAITING_VNF_ID,
+                AWAITING_PKG_ID,
                 VERIFYING_RCV_DATA,
-                SENDING_VNF_INFO,
+                SENDING_PKG_INFO,
                 FINALISING_TRANSACTION
         );
 
         /**
-         * Constructor of the flow initiated by the VnfBuyerInitiation class
-         * @param buyerSession session with the buyer that want to purchase a VNF
+         * Constructor of the flow initiated by the PkgBuyerInitiation class
+         * @param buyerSession session with the buyer that want to purchase a package
          */
         public RepositoryNodeAcceptor(FlowSession buyerSession) {
             this.buyerSession = buyerSession;
@@ -269,10 +267,10 @@ public class BuyVnfFlow {
                 }
             }
 
-            /* Set the current step to AWAITING_VNF_ID and proceed to call */
-            progressTracker.setCurrentStep(AWAITING_VNF_ID);
+            /* Set the current step to AWAITING_PKG_ID and proceed to call */
+            progressTracker.setCurrentStep(AWAITING_PKG_ID);
 
-            final StateAndRef<VnfState> vnfStateAndRef = buyerSession.receive(UniqueIdentifier.class).unwrap(data -> {
+            final StateAndRef<PkgOfferState> pkgStateAndRef = buyerSession.receive(UniqueIdentifier.class).unwrap(data -> {
                 /* Set the current step to VERIFYING_RCV_DATA and proceed to verify the received data */
                 progressTracker.setCurrentStep(VERIFYING_RCV_DATA);
 
@@ -280,22 +278,22 @@ public class BuyVnfFlow {
                 QueryCriteria.LinearStateQueryCriteria queryCriteria =
                         new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(data.getId()),
                         null, Vault.StateStatus.UNCONSUMED);
-                final List<StateAndRef<VnfState>> lst = getServiceHub().getVaultService()
-                        .queryBy(VnfState.class, queryCriteria).getStates();
+                final List<StateAndRef<PkgOfferState>> lst = getServiceHub().getVaultService()
+                        .queryBy(PkgOfferState.class, queryCriteria).getStates();
                 if(lst.size() == 0)
-                    throw new NonExistentVnfException(data);
+                    throw new NonExistentPkgException(data);
 
                 return lst.get(0);
             });
 
-            /* Set the current step to SENDING_VNF_INFO and proceed to send the requested VNF info */
-            progressTracker.setCurrentStep(SENDING_VNF_INFO);
+            /* Set the current step to SENDING_PKG_INFO and proceed to send the requested package info */
+            progressTracker.setCurrentStep(SENDING_PKG_INFO);
 
-            subFlow(new SendStateAndRefFlow(buyerSession, ImmutableList.of(vnfStateAndRef)));
+            subFlow(new SendStateAndRefFlow(buyerSession, ImmutableList.of(pkgStateAndRef)));
 
             /* Check and Sign the transaction, get the hash value of the obtained transaction */
             final SignTxFlow signTxFlow = new SignTxFlow(buyerSession, SignTransactionFlow.Companion.tracker(),
-                    vnfStateAndRef.getState().getData().getPrice());
+                    pkgStateAndRef.getState().getData().getPrice());
             final SecureHash txId = subFlow(signTxFlow).getId();
 
             /*

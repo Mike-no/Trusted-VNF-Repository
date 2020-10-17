@@ -1,6 +1,6 @@
 package it.nextworks.corda.flows;
 
-public class GetVnfsFlowUtils {
+public class GetPkgsFlowUtils {
 
     public static final String nullContainerErr     = "The received container is null.";
     public static final String nullEntryInContainer = "The received container contains null VNF info entry.";

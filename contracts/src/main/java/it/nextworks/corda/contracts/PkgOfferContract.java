@@ -1,6 +1,6 @@
 package it.nextworks.corda.contracts;
 
-import it.nextworks.corda.states.VnfState;
+import it.nextworks.corda.states.PkgOfferState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.CommandWithParties;
 import net.corda.core.contracts.Contract;
@@ -13,14 +13,14 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
-import static it.nextworks.corda.contracts.VnfUtils.*;
+import static it.nextworks.corda.contracts.PkgOfferUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 
-public class VnfContract implements Contract {
+public class PkgOfferContract implements Contract {
 
     /** This is used to identify our contract when building a transaction. */
-    public static final String ID = "it.nextworks.corda.contracts.VnfContract";
+    public static final String ID = "it.nextworks.corda.contracts.PkgOfferContract";
 
     /**
      * A transaction is valid if the verify() function of the contract of all the
@@ -33,38 +33,30 @@ public class VnfContract implements Contract {
         final CommandWithParties<Commands> command = requireSingleCommand(tx.getCommands(), Commands.class);
         final Commands commandData = command.getValue();
 
-        if(commandData instanceof Commands.CreateVNF) {
+        if(commandData instanceof Commands.RegisterPkg) {
             requireThat(require -> {
-                require.using(createVnfInputErr, tx.getInputs().isEmpty());
-                require.using(createVnfOutputErr, tx.getOutputStates().size() == 1);
+                require.using(createPkgInputErr, tx.getInputs().isEmpty());
+                require.using(createPkgOutputErr, tx.getOutputStates().size() == 1);
 
-                final VnfState output = tx.outputsOfType(VnfState.class).get(0);
-                require.using(linearId + strNullErr, output.getLinearId() != null);
+                final PkgOfferState output = tx.outputsOfType(PkgOfferState.class).get(0);
+                /* require.using(linearId + strNullErr, output.getLinearId() != null); is always true */
 
                 require.using(name + strErrMsg, isWellFormatted(output.getName()));
                 require.using(description + strErrMsg, isWellFormatted(output.getDescription()));
-                require.using(serviceType + strErrMsg, isWellFormatted(output.getServiceType()));
                 require.using(version + strErrMsg, isWellFormatted(output.getVersion()));
-                require.using(requirements + strErrMsg, isWellFormatted(output.getRequirements()));
-                require.using(resources + strErrMsg, isWellFormatted(output.getResources()));
+                require.using(pkgInfoId + strErrMsg, isWellFormatted(output.getPkgInfoId()));
                 try {
                     new URL(output.getImageLink());
                 } catch (MalformedURLException mue) {
                     throw new IllegalArgumentException(imageLink + strMueErr);
                 }
-                String repositoryLinkStr = output.getRepositoryLink();
-                try {
-                    new URL(repositoryLinkStr);
-                } catch (MalformedURLException mue) {
-                    throw new IllegalArgumentException(repositoryLink + strMueErr);
-                }
-                require.using(repositoryHashErr, output.getRepositoryHash() == repositoryLinkStr.hashCode());
                 require.using(price + strNullErr, output.getPrice() != null);
+                require.using(pkgTypeErr, output.getPkgType() != null);
 
                 final Party author = output.getAuthor();
                 final Party repositoryNode = output.getRepositoryNode();
-                require.using(VnfUtils.author + strNullErr, author != null);
-                require.using(VnfUtils.repositoryNode + strNullErr, repositoryNode != null);
+                require.using(PkgOfferUtils.author + strNullErr, author != null);
+                require.using(PkgOfferUtils.repositoryNode + strNullErr, repositoryNode != null);
                 require.using(sameEntityErr, !author.equals(repositoryNode));
 
                 final List<PublicKey> requiredSigners = command.getSigners();
@@ -77,11 +69,13 @@ public class VnfContract implements Contract {
                 return null;
             });
         }
-        else if(commandData instanceof Commands.UpdateVNF) {
+        else if(commandData instanceof Commands.UpdatePkg) {
             // TODO
+            System.out.println("Not Implemented.");
         }
-        else if(commandData instanceof  Commands.DeleteVNF) {
+        else if(commandData instanceof Commands.DeletePkg) {
             // TODO
+            System.out.println("Not Implemented.");
         }
         else
             throw new IllegalArgumentException(unknownCommand);
@@ -94,23 +88,23 @@ public class VnfContract implements Contract {
      */
     public interface Commands extends CommandData {
         /**
-         * Command used to create a new VnfState, the latter will be stored in the
+         * Command used to create a new PkgOfferState, the latter will be stored in the
          * vaults of the two participants that are involved in the transaction where this
          * command is used.
          */
-        class CreateVNF implements Commands {}
+        class RegisterPkg implements Commands {}
 
         /**
-         * Command used to update a VnfState by sign the current VnfState, used as input in the
-         * current transaction, as CONSUMED and create a new output VnfState.
+         * Command used to update a PkgOfferState by sign the current PkgOfferState, used as input in the
+         * current transaction, as CONSUMED and create a new output PkgOfferState.
          */
-        class UpdateVNF implements Commands {}
+        class UpdatePkg implements Commands {}
 
         /**
-         * Command used to delete a VnfState by simply sign the VnfState, used as input in the
+         * Command used to delete a PkgOfferState by simply sign the PkgOfferState, used as input in the
          * current transaction, ad CONSUMED.
          */
-        class DeleteVNF implements Commands {}
+        class DeletePkg implements Commands {}
     }
 
     private boolean isWellFormatted(String str){

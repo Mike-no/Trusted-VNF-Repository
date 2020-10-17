@@ -1,8 +1,9 @@
 package it.nextworks.corda.flows;
 
 import com.google.common.collect.ImmutableList;
-import it.nextworks.corda.states.VnfLicenseState;
-import it.nextworks.corda.states.VnfState;
+import it.nextworks.corda.contracts.PkgOfferUtils;
+import it.nextworks.corda.states.PkgLicenseState;
+import it.nextworks.corda.states.PkgOfferState;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
@@ -24,11 +25,11 @@ import org.junit.rules.ExpectedException;
 import java.util.Currency;
 import java.util.List;
 
-import static it.nextworks.corda.contracts.VnfUtils.buyVnfOutputCashErr;
-import static it.nextworks.corda.flows.BuyVnfFlowUtils.*;
+import static it.nextworks.corda.contracts.PkgLicenseUtils.buyPkgOutputCashErr;
+import static it.nextworks.corda.flows.BuyPkgFlowUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BuyVnfFlowTest {
+public class BuyPkgFlowTest {
 
     private MockNetwork mockNetwork;
     private StartedMockNode devNodeTest;
@@ -49,7 +50,7 @@ public class BuyVnfFlowTest {
 
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
         buyerNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(buyerX500Name));
-        repositoryNodeTest.registerInitiatedFlow(CreateVnfFlow.RepositoryNodeAcceptor.class);
+        repositoryNodeTest.registerInitiatedFlow(CreatePkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -63,22 +64,20 @@ public class BuyVnfFlowTest {
     public final ExpectedException exception = ExpectedException.none();
 
     /**
-     * Function used to generate a transaction that will output a VnfState that will
-     * be used in a VnfLicenseState transaction as component of a VnfLicenseState
+     * Function used to generate a transaction that will output a PkgOfferState that will
+     * be used in a PkgLicenseState transaction as component of a PkgLicenseState
      */
-    private VnfState generateVnfState() throws Exception {
-        CreateVnfFlow.DevInitiation flow = new CreateVnfFlow.DevInitiation(CreateVnfFlowUtils.testName,
-                CreateVnfFlowUtils.testDescription, CreateVnfFlowUtils.testServiceType,
-                CreateVnfFlowUtils.testVersion, CreateVnfFlowUtils.testRequirements,
-                CreateVnfFlowUtils.testResources, CreateVnfFlowUtils.testLink,
-                CreateVnfFlowUtils.testLink, CreateVnfFlowUtils.testPrice);
+    private PkgOfferState generatePkgOfferState() throws Exception {
+        CreatePkgFlow.DevInitiation flow = new CreatePkgFlow.DevInitiation(PkgOfferUtils.testName,
+                PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
+                PkgOfferUtils.testLink, PkgOfferUtils.testPrice, PkgOfferUtils.testPkgType);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
 
         SignedTransaction signedTransaction = future.get();
 
-        return signedTransaction.getTx().outputsOfType(VnfState.class).get(0);
+        return signedTransaction.getTx().outputsOfType(PkgOfferState.class).get(0);
     }
 
     private void issueCash(Amount<Currency> amount) {
@@ -90,11 +89,11 @@ public class BuyVnfFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -105,11 +104,11 @@ public class BuyVnfFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -120,11 +119,11 @@ public class BuyVnfFlowTest {
 
     @Test
     public void flowReturnsCommittedTransaction() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -134,11 +133,11 @@ public class BuyVnfFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -151,11 +150,12 @@ public class BuyVnfFlowTest {
 
     @Test
     public void recordedTransactionIsCorrectlyFormed() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -168,33 +168,34 @@ public class BuyVnfFlowTest {
 
             assert (tx.getInputs().size() > 0);
 
-            int vnfLicenseStateCount = 0;
+            int pkgLicenseStateCount = 0;
             int cashOutputStateCount = 0;
             for(ContractState output : tx.getOutputStates()) {
-                if(output instanceof VnfLicenseState)
-                    vnfLicenseStateCount++;
+                if(output instanceof PkgLicenseState)
+                    pkgLicenseStateCount++;
                 else if(output instanceof Cash.State)
                     cashOutputStateCount++;
                 else
-                    throw new IllegalArgumentException(buyVnfOutputCashErr);
+                    throw new IllegalArgumentException(buyPkgOutputCashErr);
             }
             assert (cashOutputStateCount > 0);
-            assert (vnfLicenseStateCount == 1);
+            assert (pkgLicenseStateCount == 1);
 
-            final VnfLicenseState vnfLicenseState = tx.outputsOfType(VnfLicenseState.class).get(0);
-            final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-            checkVnfCorrectness(savedVnfState, vnfState.getLinearId());
-            checkLicenseCorrectness(vnfLicenseState);
+            final PkgLicenseState pkgLicenseState = tx.outputsOfType(PkgLicenseState.class).get(0);
+            final PkgOfferState savedPkgOfferState = pkgLicenseState.getPkgLicensed().getState().getData();
+            checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId);
+            assertEquals(pkgLicenseState.getBuyer(), buyerNodeTest.getInfo().getLegalIdentities().get(0));
         }
     }
 
     @Test
-    public void flowRecordsTheCorrectVnfLicenseInBothPartiesVaults() throws Exception {
-        VnfState vnfState = generateVnfState();
-        issueCash(vnfState.getPrice());
+    public void flowRecordsTheCorrectPkgLicenseInBothPartiesVaults() throws Exception {
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
+        issueCash(pkgOfferState.getPrice());
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -202,50 +203,40 @@ public class BuyVnfFlowTest {
         future.get();
         for(StartedMockNode node : ImmutableList.of(buyerNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
-                List<StateAndRef<VnfLicenseState>> vnfLicenseStates = node.getServices().getVaultService()
-                        .queryBy(VnfLicenseState.class).getStates();
-                assertEquals(vnfLicenseStates.size(), 1);
+                List<StateAndRef<PkgLicenseState>> pkgLicenseStates = node.getServices().getVaultService()
+                        .queryBy(PkgLicenseState.class).getStates();
+                assertEquals(pkgLicenseStates.size(), 1);
 
-                final VnfLicenseState vnfLicenseState = vnfLicenseStates.get(0).getState().getData();
-                final VnfState savedVnfState = vnfLicenseState.getVnfLicensed().getState().getData();
-                checkVnfCorrectness(savedVnfState, vnfState.getLinearId());
-                checkLicenseCorrectness(vnfLicenseState);
+                final PkgLicenseState pkgLicenseState = pkgLicenseStates.get(0).getState().getData();
+                final PkgOfferState savedPkgOfferState = pkgLicenseState.getPkgLicensed().getState().getData();
+                checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId);
+                assertEquals(pkgLicenseState.getBuyer(), buyerNodeTest.getInfo().getLegalIdentities().get(0));
 
                 return null;
             });
         }
     }
 
-    private void checkVnfCorrectness(@NotNull VnfState recordedState, @NotNull UniqueIdentifier vnfId) {
-        assertEquals(recordedState.getLinearId(), vnfId);
-        assertEquals(recordedState.getName(), CreateVnfFlowUtils.testName);
-        assertEquals(recordedState.getDescription(), CreateVnfFlowUtils.testDescription);
-        assertEquals(recordedState.getServiceType(), CreateVnfFlowUtils.testServiceType);
-        assertEquals(recordedState.getVersion(), CreateVnfFlowUtils.testVersion);
-        assertEquals(recordedState.getRequirements(), CreateVnfFlowUtils.testRequirements);
-        assertEquals(recordedState.getResources(), CreateVnfFlowUtils.testResources);
-        assertEquals(recordedState.getImageLink(), CreateVnfFlowUtils.testLink);
-        assertEquals(recordedState.getRepositoryLink(), CreateVnfFlowUtils.testLink);
-        assertEquals(recordedState.getRepositoryHash(), CreateVnfFlowUtils.testLink.hashCode());
-        assertEquals(recordedState.getPrice(), CreateVnfFlowUtils.testPrice);
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
+        assertEquals(recordedState.getLinearId(), pkgId);
+        assertEquals(recordedState.getName(), PkgOfferUtils.testName);
+        assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
+        assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
+        assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
+        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
-        assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
-    }
-
-    private void checkLicenseCorrectness(@NotNull VnfLicenseState recordedState) {
-        assertEquals(recordedState.getRepositoryLink(), CreateVnfFlowUtils.testLink);
-        assertEquals(recordedState.getRepositoryHash(), CreateVnfFlowUtils.testLink.hashCode());
-        assertEquals(recordedState.getBuyer(), buyerNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
     }
 
     @Test
     public void borrowerMustHaveCashInRightCurrency() throws Exception {
-        VnfState vnfState = generateVnfState();
+        PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(Currencies.DOLLARS(1));
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         try {
@@ -258,10 +249,10 @@ public class BuyVnfFlowTest {
 
     @Test
     public void borrowerMustHaveEnoughCashInRightCurrency() throws Exception {
-        VnfState vnfState = generateVnfState();
+        PkgOfferState pkgOfferState = generatePkgOfferState();
 
-        BuyVnfFlow.VnfBuyerInitiation flow =
-                new BuyVnfFlow.VnfBuyerInitiation(vnfState.getLinearId(), vnfState.getPrice());
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         try {

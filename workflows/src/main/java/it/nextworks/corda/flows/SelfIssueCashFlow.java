@@ -30,7 +30,7 @@ public class SelfIssueCashFlow extends FlowLogic<Cash.State> {
         OpaqueBytes issueRef = OpaqueBytes.of("1".getBytes());
 
         final Party notary =
-                getServiceHub().getNetworkMapCache().getNotary(CordaX500Name.parse(BuyVnfFlowUtils.notaryX500Name));
+                getServiceHub().getNetworkMapCache().getNotary(CordaX500Name.parse(BuyPkgFlowUtils.notaryX500Name));
 
         /* Create the cash issuance transaction. */
         SignedTransaction cashIssueTransaction = subFlow(new CashIssueFlow(amount, issueRef, notary)).getStx();
