@@ -10,10 +10,8 @@ import java.util.Locale;
 /** Simply a class with various utility functions and statements */
 public class PkgOfferUtils {
 
-    public static final String createPkgInputErr = "No input should be consumed when create a package";
-    public static final String createPkgOutputErr = "There should be one output state of type PkgOfferState";
-
-    public static final String linearId            = "The <linearId>";
+    public static final String createPkgInputErr  = "No input should be consumed when create a package.";
+    public static final String createPkgOutputErr = "There should be one output state of type PkgOfferState.";
 
     public static final String name                = "The <name>";
     public static final String description         = "The <description>";

@@ -24,7 +24,7 @@ import static it.nextworks.corda.contracts.PkgLicenseUtils.*;
 import static net.corda.testing.node.NodeTestUtils.ledger;
 
 /** Test PkgLicenseContract class in cases where the command used in the transaction is BuyPkg */
-public class BuyPkgOfferContractTest {
+public class BuyPkgContractTest {
 
     /** Simulate a Corda Network composed by three nodes: a buyer, a developer and the repositoryNode */
     private static final TestIdentity devTest =
