@@ -18,13 +18,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import javax.annotation.Signed;
 import java.util.List;
 
-import static it.nextworks.corda.flows.CreatePkgFlowUtils.*;
+import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CreatePkgFlowTest {
+public class RegisterPkgFlowTest {
 
     private MockNetwork mockNetwork;
     private StartedMockNode devNodeTest;
@@ -42,7 +41,7 @@ public class CreatePkgFlowTest {
         devNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(devX500Name));
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
 
-        repositoryNodeTest.registerInitiatedFlow(CreatePkgFlow.RepositoryNodeAcceptor.class);
+        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -55,15 +54,15 @@ public class CreatePkgFlowTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
-    private CreatePkgFlow.DevInitiation createFlow() {
-        return new CreatePkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
+    private RegisterPkgFlow.DevInitiation createFlow() {
+        return new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
                 PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
                 PkgOfferUtils.testPkgType);
     }
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
-        CreatePkgFlow.DevInitiation flow = createFlow();
+        RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -74,7 +73,7 @@ public class CreatePkgFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
-        CreatePkgFlow.DevInitiation flow = createFlow();
+        RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -85,7 +84,7 @@ public class CreatePkgFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
-        CreatePkgFlow.DevInitiation flow = createFlow();
+        RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -98,7 +97,7 @@ public class CreatePkgFlowTest {
 
     @Test
     public void recordedTransactionHasNoInputsAndASingleOutputPkg() throws Exception {
-        CreatePkgFlow.DevInitiation flow = createFlow();
+        RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -121,7 +120,7 @@ public class CreatePkgFlowTest {
 
     @Test
     public void flowRecordsTheCorrectPkgInBothPartiesVaults() throws Exception {
-        CreatePkgFlow.DevInitiation flow = createFlow();
+        RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();

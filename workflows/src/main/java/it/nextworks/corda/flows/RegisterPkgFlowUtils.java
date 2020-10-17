@@ -1,6 +1,6 @@
 package it.nextworks.corda.flows;
 
-public class CreatePkgFlowUtils {
+public class RegisterPkgFlowUtils {
     public static final String GENERATING_TRANSACTION = "Generating transaction based on new package.";
     public static final String VERIFYING_TRANSACTION  = "Verifying contract constraints.";
     public static final String SIGNING_TRANSACTION    = "Signing transaction with our private key.";

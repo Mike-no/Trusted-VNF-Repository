@@ -21,10 +21,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Currency;
 
-import static it.nextworks.corda.flows.CreatePkgFlowUtils.*;
+import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 
-public class CreatePkgFlow {
+public class RegisterPkgFlow {
     @InitiatingFlow
     @StartableByRPC
     public static class DevInitiation extends FlowLogic<SignedTransaction> {
@@ -37,16 +37,16 @@ public class CreatePkgFlow {
         private final Amount<Currency> price;
         private final PkgOfferState.PkgType pkgType;
 
-        private final Step GENERATING_TRANSACTION = new Step(CreatePkgFlowUtils.GENERATING_TRANSACTION);
-        private final Step VERIFYING_TRANSACTION  = new Step(CreatePkgFlowUtils.VERIFYING_TRANSACTION);
-        private final Step SIGNING_TRANSACTION    = new Step(CreatePkgFlowUtils.SIGNING_TRANSACTION);
-        private final Step GATHERING_SIGNS        = new Step(CreatePkgFlowUtils.GATHERING_SIGNS){
+        private final Step GENERATING_TRANSACTION = new Step(RegisterPkgFlowUtils.GENERATING_TRANSACTION);
+        private final Step VERIFYING_TRANSACTION  = new Step(RegisterPkgFlowUtils.VERIFYING_TRANSACTION);
+        private final Step SIGNING_TRANSACTION    = new Step(RegisterPkgFlowUtils.SIGNING_TRANSACTION);
+        private final Step GATHERING_SIGNS        = new Step(RegisterPkgFlowUtils.GATHERING_SIGNS){
             @Override
             public ProgressTracker childProgressTracker() {
                 return CollectSignaturesFlow.Companion.tracker();
             }
         };
-        private final Step FINALISING_TRANSACTION = new Step(CreatePkgFlowUtils.FINALISING_TRANSACTION) {
+        private final Step FINALISING_TRANSACTION = new Step(RegisterPkgFlowUtils.FINALISING_TRANSACTION) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return FinalityFlow.Companion.tracker();

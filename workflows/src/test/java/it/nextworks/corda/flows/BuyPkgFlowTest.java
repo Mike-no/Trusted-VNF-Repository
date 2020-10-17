@@ -50,7 +50,7 @@ public class BuyPkgFlowTest {
 
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
         buyerNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(buyerX500Name));
-        repositoryNodeTest.registerInitiatedFlow(CreatePkgFlow.RepositoryNodeAcceptor.class);
+        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -68,7 +68,7 @@ public class BuyPkgFlowTest {
      * be used in a PkgLicenseState transaction as component of a PkgLicenseState
      */
     private PkgOfferState generatePkgOfferState() throws Exception {
-        CreatePkgFlow.DevInitiation flow = new CreatePkgFlow.DevInitiation(PkgOfferUtils.testName,
+        RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
                 PkgOfferUtils.testLink, PkgOfferUtils.testPrice, PkgOfferUtils.testPkgType);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);

@@ -102,7 +102,7 @@ public class DriverBasedFlowsTest {
 
                 /* Start the creation flow and verify that the pkg state has been stored in the vault of each node */
                 SignedTransaction signedTransaction =
-                        devHandle.getRpc().startFlowDynamic(CreatePkgFlow.DevInitiation.class,
+                        devHandle.getRpc().startFlowDynamic(RegisterPkgFlow.DevInitiation.class,
                             PkgOfferUtils.testName, PkgOfferUtils.testDescription, PkgOfferUtils.testVersion,
                             PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
                             PkgOfferUtils.testPkgType).getReturnValue().get();
