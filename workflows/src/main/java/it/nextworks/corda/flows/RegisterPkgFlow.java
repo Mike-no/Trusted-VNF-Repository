@@ -4,15 +4,14 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.nextworks.corda.contracts.PkgOfferContract;
+import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgOfferState;
-import net.corda.core.contracts.Amount;
-import net.corda.core.contracts.Command;
-import net.corda.core.contracts.ContractState;
-import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.contracts.*;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
+import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
@@ -20,11 +19,20 @@ import net.corda.core.utilities.ProgressTracker.Step;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Currency;
+import java.util.List;
 
 import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
-import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 public class RegisterPkgFlow {
+    /**
+     * This exception will be thrown if the developer hasn't already established
+     * a fee agreement with the Repository Node.
+     */
+    public static class NotExistingAgreementException extends FlowException {
+        public NotExistingAgreementException() { super(notExistingAgreement); }
+    }
+
+
     @InitiatingFlow
     @StartableByRPC
     public static class DevInitiation extends FlowLogic<SignedTransaction> {
@@ -176,15 +184,19 @@ public class RegisterPkgFlow {
                  * repositoryNode when accepts new package
                  */
                 @Override
-                protected void checkTransaction(@NotNull SignedTransaction stx) {
-                    requireThat(require -> {
-                        ContractState output = stx.getTx().getOutputs().get(0).getData();
-                        require.using(notPkgStateErr, output instanceof PkgOfferState);
+                protected void checkTransaction(@NotNull SignedTransaction stx) throws NotExistingAgreementException {
+                    ContractState output = stx.getTx().getOutputs().get(0).getData();
+                    if(!(output instanceof PkgOfferState))
+                        throw new IllegalArgumentException(notPkgStateErr);
 
-                        // TODO control that the developer has established a fee
-
-                        return null;
-                    });
+                    QueryCriteria.VaultQueryCriteria queryCriteria =
+                            new QueryCriteria.VaultQueryCriteria()
+                                    .withExactParticipants(ImmutableList.of(
+                                            devSession.getCounterparty(), getOurIdentity()));
+                    List<StateAndRef<FeeAgreementState>> lst =
+                            getServiceHub().getVaultService().queryBy(FeeAgreementState.class, queryCriteria).getStates();
+                    if(lst.isEmpty())
+                        throw new NotExistingAgreementException();
                 }
             }
             /* Check and Sign the transaction, get the hash value of the obtained transaction */

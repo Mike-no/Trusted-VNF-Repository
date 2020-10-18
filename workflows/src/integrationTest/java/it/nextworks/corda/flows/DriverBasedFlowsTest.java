@@ -3,6 +3,7 @@ package it.nextworks.corda.flows;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.nextworks.corda.contracts.PkgOfferUtils;
+import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgLicenseState;
 import it.nextworks.corda.states.PkgOfferState;
 import net.corda.core.concurrent.CordaFuture;
@@ -88,9 +89,14 @@ public class DriverBasedFlowsTest {
                         devNodeTest.getName());
 
                 /*
-                 * Register the observer objects to track the dev's vault and the repository's vault
+                 * Register the observer objects to track the dev's vault and the repository's vault (FeeAgreementState)
+                 * Register the observer objects to track the dev's vault and the repository's vault (PkgOfferState)
                  * Register the observer objects to track the buyer's vault and the repository's vault
                  */
+                Observable<Vault.Update<FeeAgreementState>> devFeeVaultUpdates =
+                        devHandle.getRpc().vaultTrack(FeeAgreementState.class).getUpdates();
+                Observable<Vault.Update<FeeAgreementState>> repositoryFeeVaultUpdates =
+                        repositoryHandle.getRpc().vaultTrack(FeeAgreementState.class).getUpdates();
                 Observable<Vault.Update<PkgOfferState>> devVaultUpdates =
                         devHandle.getRpc().vaultTrack(PkgOfferState.class).getUpdates();
                 Observable<Vault.Update<PkgOfferState>> repositoryPkgVaultUpdates =
@@ -99,6 +105,20 @@ public class DriverBasedFlowsTest {
                         buyerHandle.getRpc().vaultTrack(PkgLicenseState.class).getUpdates();
                 Observable<Vault.Update<PkgLicenseState>> repositoryLicenseVaultUpdates =
                         repositoryHandle.getRpc().vaultTrack(PkgLicenseState.class).getUpdates();
+
+                /* Start the fee agreement flow and verify that the fee state has been stored in the vault of each node */
+                devHandle.getRpc().startFlowDynamic(EstablishFeeAgreementFlow.DevInitiation.class, 15)
+                        .getReturnValue().get();
+
+                Class<Vault.Update<FeeAgreementState>> feeVaultUpdateClass =
+                        (Class<Vault.Update<FeeAgreementState>>)(Class<?>)Vault.Update.class;
+
+                checkVaultsAfterFeeAgreement(devFeeVaultUpdates, feeVaultUpdateClass,
+                        devHandle.getNodeInfo().getLegalIdentities().get(0),
+                        repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
+                checkVaultsAfterFeeAgreement(repositoryFeeVaultUpdates, feeVaultUpdateClass,
+                        devHandle.getNodeInfo().getLegalIdentities().get(0),
+                        repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
 
                 /* Start the creation flow and verify that the pkg state has been stored in the vault of each node */
                 SignedTransaction signedTransaction =
@@ -140,6 +160,21 @@ public class DriverBasedFlowsTest {
 
             return null;
         });
+    }
+
+    private void checkVaultsAfterFeeAgreement(@NotNull Observable<Vault.Update<FeeAgreementState>> observer,
+                                              @NotNull Class<Vault.Update<FeeAgreementState>> feeVaultUpdateClass,
+                                              @NotNull Party developer,
+                                              @NotNull Party repositoryNode) {
+        expectEvents(observer, true, () ->
+                expect(feeVaultUpdateClass, update -> true, update -> {
+                    FeeAgreementState feeAgreementState = update.getProduced().iterator().next().getState().getData();
+                    assertEquals(feeAgreementState.getDeveloper(), developer);
+                    assertEquals(feeAgreementState.getRepositoryNode(), repositoryNode);
+
+                    return null;
+                })
+        );
     }
 
     private void checkVaultsAfterCreatePkg(@NotNull Observable<Vault.Update<PkgOfferState>> observer,

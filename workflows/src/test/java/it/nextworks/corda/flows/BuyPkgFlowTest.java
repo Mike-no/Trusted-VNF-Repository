@@ -63,6 +63,16 @@ public class BuyPkgFlowTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    /** Function used to generate a transaction that will output a FeeAgreementState */
+    private void generateFeeAgreementState() throws Exception {
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
+        CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
+
+        mockNetwork.runNetwork();
+
+        future.get();
+    }
+
     /**
      * Function used to generate a transaction that will output a PkgOfferState that will
      * be used in a PkgLicenseState transaction as component of a PkgLicenseState
@@ -89,6 +99,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(pkgOfferState.getPrice());
 
@@ -104,6 +115,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(pkgOfferState.getPrice());
 
@@ -119,6 +131,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void flowReturnsCommittedTransaction() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(pkgOfferState.getPrice());
 
@@ -133,6 +146,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(pkgOfferState.getPrice());
 
@@ -150,6 +164,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void recordedTransactionIsCorrectlyFormed() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         issueCash(pkgOfferState.getPrice());
@@ -190,6 +205,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void flowRecordsTheCorrectPkgLicenseInBothPartiesVaults() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         issueCash(pkgOfferState.getPrice());
@@ -232,6 +248,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void borrowerMustHaveCashInRightCurrency() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(Currencies.DOLLARS(1));
 
@@ -249,6 +266,7 @@ public class BuyPkgFlowTest {
 
     @Test
     public void borrowerMustHaveEnoughCashInRightCurrency() throws Exception {
+        generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
 
         BuyPkgFlow.PkgBuyerInitiation flow =
@@ -260,6 +278,25 @@ public class BuyPkgFlowTest {
             future.get();
         } catch(Exception exception) {
             assert exception.getMessage().equals("java.lang.IllegalArgumentException: " + missingCash);
+        }
+    }
+
+    @Test
+    public void pkgMustExist() throws Exception {
+        generateFeeAgreementState();
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+
+        UniqueIdentifier pkgId = new UniqueIdentifier();
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
+        CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
+
+        try {
+            mockNetwork.runNetwork();
+            future.get();
+        } catch(Exception exception) {
+            assert exception.getMessage()
+                    .equals("it.nextworks.corda.flows.BuyPkgFlow$NonExistentPkgException: " + nonExistentPkg + pkgId);
         }
     }
 }

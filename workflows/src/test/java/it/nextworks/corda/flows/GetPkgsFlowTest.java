@@ -53,6 +53,16 @@ public class GetPkgsFlowTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    /** Function used to generate a transaction that will output a FeeAgreementState */
+    private void generateFeeAgreementState() throws Exception {
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
+        CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
+
+        mockNetwork.runNetwork();
+
+        future.get();
+    }
+
     /** Function used to generate a transaction that will output a PkgOfferState */
     private void generatePkgOfferState() throws Exception {
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
@@ -69,6 +79,7 @@ public class GetPkgsFlowTest {
 
     @Test
     public void storedPkgOfferCanBeViewedInTheMarketplace() throws Exception {
+        generateFeeAgreementState();
         generatePkgOfferState();
 
         GetPkgsFlow.GetPkgsInfoInitiation flow = new GetPkgsFlow.GetPkgsInfoInitiation();

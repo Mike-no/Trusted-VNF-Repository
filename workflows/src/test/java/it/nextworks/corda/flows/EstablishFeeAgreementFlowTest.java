@@ -1,13 +1,11 @@
 package it.nextworks.corda.flows;
 
 import com.google.common.collect.ImmutableList;
-import it.nextworks.corda.contracts.PkgOfferUtils;
-import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.FeeAgreementState;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.TransactionState;
-import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.testing.node.*;
@@ -20,10 +18,10 @@ import org.junit.rules.ExpectedException;
 
 import java.util.List;
 
-import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
+import static it.nextworks.corda.flows.EstablishFeeAgreementFlowUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RegisterPkgFlowTest {
+public class EstablishFeeAgreementFlowTest {
 
     private MockNetwork mockNetwork;
     private StartedMockNode devNodeTest;
@@ -54,26 +52,9 @@ public class RegisterPkgFlowTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
-    /** Function used to generate a transaction that will output a FeeAgreementState */
-    private void generateFeeAgreementState() throws Exception {
-        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
-        CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
-
-        mockNetwork.runNetwork();
-
-        future.get();
-    }
-
-    private RegisterPkgFlow.DevInitiation createFlow() {
-        return new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
-                PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
-                PkgOfferUtils.testPkgType);
-    }
-
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheInitiator() throws Exception {
-        generateFeeAgreementState();
-        RegisterPkgFlow.DevInitiation flow = createFlow();
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -84,8 +65,7 @@ public class RegisterPkgFlowTest {
 
     @Test
     public void signedTransactionReturnedByTheFlowIsSignedByTheAcceptor() throws Exception {
-        generateFeeAgreementState();
-        RegisterPkgFlow.DevInitiation flow = createFlow();
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -96,8 +76,7 @@ public class RegisterPkgFlowTest {
 
     @Test
     public void flowRecordsATransactionInBothPartiesTransactionStorages() throws Exception {
-        generateFeeAgreementState();
-        RegisterPkgFlow.DevInitiation flow = createFlow();
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -110,14 +89,12 @@ public class RegisterPkgFlowTest {
 
     @Test
     public void recordedTransactionHasNoInputsAndASingleOutputPkg() throws Exception {
-        generateFeeAgreementState();
-        RegisterPkgFlow.DevInitiation flow = createFlow();
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -125,62 +102,73 @@ public class RegisterPkgFlowTest {
             List<TransactionState<ContractState>> txOutputs = recordedTx.getTx().getOutputs();
             assert (txOutputs.size() == 1);
             ContractState contractState = txOutputs.get(0).getData();
-            assert (contractState instanceof PkgOfferState);
+            assert (contractState instanceof FeeAgreementState);
 
-            PkgOfferState recordedState = (PkgOfferState) contractState;
-            checkPkgOfferStateCorrectness(recordedState, pkgId);
+            FeeAgreementState feeAgreementState = (FeeAgreementState)contractState;
+            checkFeeAgreementStateCorrectness(feeAgreementState);
         }
     }
 
     @Test
     public void flowRecordsTheCorrectPkgInBothPartiesVaults() throws Exception {
-        generateFeeAgreementState();
-        RegisterPkgFlow.DevInitiation flow = createFlow();
+        EstablishFeeAgreementFlow.DevInitiation flow = new EstablishFeeAgreementFlow.DevInitiation(15);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
 
-        SignedTransaction signedTx = future.get();
-        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
+        future.get();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
-                List<StateAndRef<PkgOfferState>> pkgs = node.getServices().getVaultService()
-                        .queryBy(PkgOfferState.class).getStates();
-                assertEquals(pkgs.size(), 1);
+                List<StateAndRef<FeeAgreementState>> fees = node.getServices().getVaultService()
+                        .queryBy(FeeAgreementState.class).getStates();
+                assertEquals(fees.size(), 1);
 
-                PkgOfferState recordedState = pkgs.get(0).getState().getData();
-                checkPkgOfferStateCorrectness(recordedState, pkgId);
+                FeeAgreementState feeAgreementState = fees.get(0).getState().getData();
+                checkFeeAgreementStateCorrectness(feeAgreementState);
 
                 return null;
             });
         }
     }
 
-    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
-        assertEquals(recordedState.getLinearId(), pkgId);
-        assertEquals(recordedState.getName(), PkgOfferUtils.testName);
-        assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
-        assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
-        assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
-        assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
-        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
-        assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
-        assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
-        assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
+    private void checkFeeAgreementStateCorrectness(@NotNull FeeAgreementState feeAgreementState) {
+        assertEquals(feeAgreementState.getDeveloper(), devNodeTest.getInfo().getLegalIdentities().get(0));
+        assertEquals(feeAgreementState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
     }
 
     @Test
-    public void feeAgreementMustBeEstablished() throws Exception {
-        RegisterPkgFlow.DevInitiation flow = createFlow();
-        CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
+    public void agreementMustBeEstablishedOneTime() throws Exception {
+        EstablishFeeAgreementFlow.DevInitiation firstFlow = new EstablishFeeAgreementFlow.DevInitiation(15);
+        CordaFuture<SignedTransaction> firstAgreement = devNodeTest.startFlow(firstFlow);
+
+        mockNetwork.runNetwork();
+        firstAgreement.get();
+
+        EstablishFeeAgreementFlow.DevInitiation secondFlow = new EstablishFeeAgreementFlow.DevInitiation(15);
+        CordaFuture<SignedTransaction> secondAgreement = devNodeTest.startFlow(secondFlow);
 
         try {
             mockNetwork.runNetwork();
-            future.get();
+            secondAgreement.get();
         } catch(Exception exception) {
             assert exception.getMessage()
-                    .equals("it.nextworks.corda.flows.RegisterPkgFlow$NotExistingAgreementException: "
-                    + notExistingAgreement);
+                    .equals("it.nextworks.corda.flows.EstablishFeeAgreementFlow$AlreadyEstablishedAgreementException: "
+                            + AlreadyEstablishedFee);
+        }
+    }
+
+    @Test
+    public void agreementBetweenPartyMustBeReached() throws Exception {
+        EstablishFeeAgreementFlow.DevInitiation firstFlow = new EstablishFeeAgreementFlow.DevInitiation(9);
+        CordaFuture<SignedTransaction> firstAgreement = devNodeTest.startFlow(firstFlow);
+
+        try {
+            mockNetwork.runNetwork();
+            firstAgreement.get();
+        } catch(Exception exception) {
+            assert exception.getMessage()
+                    .equals("net.corda.core.flows.FlowException: " +
+                            "java.lang.IllegalArgumentException: Failed requirement: " + tooHighFee);
         }
     }
 }

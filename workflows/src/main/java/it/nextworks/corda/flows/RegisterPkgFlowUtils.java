@@ -12,7 +12,9 @@ public class RegisterPkgFlowUtils {
     public static final String repositoryX500Name     = "O=RepositoryNode,L=Pisa,C=IT";
 
     public static final String notPkgStateErr         = "This must be a package transaction.";
+    public static final String notExistingAgreement   = "The developer hasn't already establish a fee agreement " +
+            "with the Repository Node.";
 
-    public static final String cordAppContractsPkg     = "it.nextworks.corda.contracts";
-    public static final String cordAppFlowsPkg         = "it.nextworks.corda.flows";
+    public static final String cordAppContractsPkg    = "it.nextworks.corda.contracts";
+    public static final String cordAppFlowsPkg        = "it.nextworks.corda.flows";
 }
