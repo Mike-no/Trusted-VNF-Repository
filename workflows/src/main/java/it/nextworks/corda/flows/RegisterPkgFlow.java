@@ -2,7 +2,6 @@ package it.nextworks.corda.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import it.nextworks.corda.contracts.PkgOfferContract;
 import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgOfferState;
@@ -149,12 +148,12 @@ public class RegisterPkgFlow {
 
             FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
             final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(partSignedTx,
-                    ImmutableSet.of(repositoryNodeSession)));
+                    ImmutableList.of(repositoryNodeSession)));
 
             /* Set the current step to FINALISING_TRANSACTION and starts a finalising sub-flow */
             progressTracker.setCurrentStep(FINALISING_TRANSACTION);
 
-            return subFlow(new FinalityFlow(fullySignedTx, ImmutableSet.of(repositoryNodeSession)));
+            return subFlow(new FinalityFlow(fullySignedTx, ImmutableList.of(repositoryNodeSession)));
         }
     }
 

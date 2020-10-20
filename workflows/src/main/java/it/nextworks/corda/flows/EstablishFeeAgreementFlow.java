@@ -2,7 +2,6 @@ package it.nextworks.corda.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import it.nextworks.corda.contracts.FeeAgreementContract;
 import it.nextworks.corda.states.FeeAgreementState;
 import net.corda.core.contracts.Command;
@@ -188,12 +187,12 @@ public class EstablishFeeAgreementFlow {
             progressTracker.setCurrentStep(GATHERING_SIGNS);
 
             final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(partSignedTx,
-                    ImmutableSet.of(devSession)));
+                    ImmutableList.of(devSession)));
 
             /* Set the current step to FINALISING_TRANSACTION and starts a finalising sub-flow */
             progressTracker.setCurrentStep(FINALISING_TRANSACTION);
 
-            return subFlow(new FinalityFlow(fullySignedTx, ImmutableSet.of(devSession)));
+            return subFlow(new FinalityFlow(fullySignedTx, ImmutableList.of(devSession)));
         }
     }
 }

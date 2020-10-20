@@ -22,11 +22,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.List;
 
 import static it.nextworks.corda.contracts.PkgLicenseUtils.buyPkgOutputCashErr;
 import static it.nextworks.corda.flows.BuyPkgFlowUtils.*;
+import static net.corda.finance.workflows.GetBalances.getCashBalance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BuyPkgFlowTest {
@@ -298,5 +301,32 @@ public class BuyPkgFlowTest {
             assert exception.getMessage()
                     .equals("it.nextworks.corda.flows.BuyPkgFlow$NonExistentPkgException: " + nonExistentPkg + pkgId);
         }
+    }
+
+    @Test
+    public void authorMustReceiveTheRightAmountOfCash() throws Exception {
+        generateFeeAgreementState();
+        PkgOfferState pkgOfferState = generatePkgOfferState();
+        Amount<Currency> price = pkgOfferState.getPrice();
+        issueCash(price);
+
+        Amount<Currency> cashBalance = getCashBalance(devNodeTest.getServices(), price.getToken());
+        System.out.println(cashBalance.toString());
+
+        BuyPkgFlow.PkgBuyerInitiation flow =
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), price);
+        CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
+
+        mockNetwork.runNetwork();
+
+        future.get();
+
+        cashBalance = getCashBalance(devNodeTest.getServices(), price.getToken());
+        Amount<Currency> toBeingIssued =
+                Amount.fromDecimal(price.toDecimal().divide(BigDecimal.valueOf(100), 4,
+                        RoundingMode.UNNECESSARY).multiply(BigDecimal.valueOf(90)).setScale(2,
+                        BigDecimal.ROUND_HALF_EVEN), price.getToken());
+        assertEquals(cashBalance, toBeingIssued);
+        System.out.println(cashBalance.toString());
     }
 }

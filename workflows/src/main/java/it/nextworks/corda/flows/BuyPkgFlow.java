@@ -2,7 +2,6 @@ package it.nextworks.corda.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import it.nextworks.corda.contracts.PkgLicenseContract;
 import it.nextworks.corda.states.PkgOfferState;
 import it.nextworks.corda.states.PkgLicenseState;
@@ -147,7 +146,7 @@ public class BuyPkgFlow {
                     repositoryNode.getOwningKey()));
             TransactionBuilder txBuilder = new TransactionBuilder(notary);
 
-            final Amount<Currency> cashBalance = getCashBalance(getServiceHub(), (Currency)price.getToken());
+            final Amount<Currency> cashBalance = getCashBalance(getServiceHub(), price.getToken());
             if(cashBalance.getQuantity() < price.getQuantity())
                 throw new IllegalArgumentException(missingCash);
 
@@ -172,12 +171,12 @@ public class BuyPkgFlow {
             progressTracker.setCurrentStep(GATHERING_SIGNS);
 
             final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(partSignedTx,
-                    ImmutableSet.of(repositoryNodeSession)));
+                    ImmutableList.of(repositoryNodeSession)));
 
             /* Set the current step to FINALISING_TRANSACTION and starts a finalising sub-flow */
             progressTracker.setCurrentStep(FINALISING_TRANSACTION);
 
-            return subFlow(new FinalityFlow(fullySignedTx, ImmutableSet.of(repositoryNodeSession)));
+            return subFlow(new FinalityFlow(fullySignedTx, ImmutableList.of(repositoryNodeSession)));
         }
 
         @Suspendable
@@ -217,6 +216,7 @@ public class BuyPkgFlow {
                 return FinalityFlow.Companion.tracker();
             }
         };
+        private final Step SENDING_CASH_TO_AUTHOR = new Step(BuyPkgFlowUtils.SENDING_CASH_TO_AUTHOR);
 
         /**
          * The progress tracker checkpoints each stage of the flow and outputs the specified messages when each
@@ -227,7 +227,8 @@ public class BuyPkgFlow {
                 AWAITING_PKG_ID,
                 VERIFYING_RCV_DATA,
                 SENDING_PKG_INFO,
-                FINALISING_TRANSACTION
+                FINALISING_TRANSACTION,
+                SENDING_CASH_TO_AUTHOR
         );
 
         /**
@@ -303,7 +304,19 @@ public class BuyPkgFlow {
              */
             progressTracker.setCurrentStep(FINALISING_TRANSACTION);
 
-            return subFlow(new ReceiveFinalityFlow(buyerSession, txId));
+            SignedTransaction stx = subFlow(new ReceiveFinalityFlow(buyerSession, txId));
+
+            /*
+             * Set the current step to SENDING_CASH_TO_AUTHOR and starts a sub flow to send the amount that belongs
+             * to the author of the package sold
+             */
+            progressTracker.setCurrentStep(SENDING_CASH_TO_AUTHOR);
+
+            PkgLicenseState pkgLicenseState = stx.getTx().outputsOfType(PkgLicenseState.class).get(0);
+            subFlow(new IssueCashToDevFlow.IssueCashToDevInitiator(pkgLicenseState,
+                    pkgLicenseState.getPkgLicensed().getState().getData().getAuthor()));
+
+            return stx;
         }
     }
 }

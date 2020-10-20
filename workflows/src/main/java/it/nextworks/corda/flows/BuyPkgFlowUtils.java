@@ -22,6 +22,7 @@ public class BuyPkgFlowUtils {
     public static final String AWAITING_PKG_ID        = "Waiting for the ID of the package that the buyer want to purchase.";
     public static final String VERIFYING_RCV_DATA     = "Verifying the information received.";
     public static final String SENDING_PKG_INFO       = "Sending information about the required package.";
+    public static final String SENDING_CASH_TO_AUTHOR = "Sending the amount that belongs to the author of the package.";
 
     public static final String cordAppContractsPkg    = "it.nextworks.corda.contracts";
     public static final String cordAppFlowsPkg        = "it.nextworks.corda.flows";
