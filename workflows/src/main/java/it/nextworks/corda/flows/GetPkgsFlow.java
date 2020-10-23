@@ -96,7 +96,8 @@ public class GetPkgsFlow {
                 PageSpecification pageSpecification = new PageSpecification(pageNumber, DEFAULT_PAGE_SIZE);
                 Vault.Page<PkgOfferState> results =
                         getServiceHub().getVaultService()
-                                .queryBy(PkgOfferState.class, new VaultQueryCriteria(), pageSpecification);
+                                .queryBy(PkgOfferState.class, new VaultQueryCriteria()
+                                        .withStatus(Vault.StateStatus.UNCONSUMED), pageSpecification);
                 totalResults = results.getTotalStatesAvailable();
                 states.addAll(results.getStates());
                 pageNumber++;
