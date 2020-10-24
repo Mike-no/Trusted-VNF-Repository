@@ -3,6 +3,7 @@ package it.nextworks.corda.contracts;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.states.PkgOfferState;
 import it.nextworks.corda.states.PkgLicenseState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.PartyAndReference;
 import net.corda.core.contracts.StateAndRef;
@@ -43,10 +44,17 @@ public class BuyPkgContractTest {
      * @param tx transaction that will output a PkgOfferState
      */
     private void generatePkgOfferState(@NotNull TransactionDSL<?> tx) {
-        tx.output(PkgOfferContract.ID, toBeLicensed, new PkgOfferState(PkgOfferUtils.testId, PkgOfferUtils.testName,
+        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
+                PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
+                PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
+                PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPrice, PkgOfferUtils.testQuantity,
+                PkgOfferUtils.testValidFor);
+        PkgOfferState pkgOfferState = new PkgOfferState(PkgOfferUtils.testId, PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
-                PkgOfferUtils.testLink, PkgOfferUtils.testPrice, PkgOfferUtils.testPkgType, devTest.getParty(),
-                repositoryNodeTest.getParty()));
+                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice, devTest.getParty(),
+                repositoryNodeTest.getParty());
+        tx.output(PkgOfferContract.ID, toBeLicensed, pkgOfferState);
         tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                 new PkgOfferContract.Commands.RegisterPkg());
     }
@@ -73,7 +81,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -103,7 +111,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -133,7 +141,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(2,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(200,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -162,7 +170,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -191,7 +199,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -220,7 +228,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(devTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(devTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -249,7 +257,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 
@@ -278,7 +286,7 @@ public class BuyPkgContractTest {
             });
 
             ledger.transaction(tx -> {
-                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(1,
+                Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
                 tx.input(Cash.class.getName(), inputCash);
 

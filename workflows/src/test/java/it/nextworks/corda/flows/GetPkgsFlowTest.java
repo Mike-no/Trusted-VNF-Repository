@@ -3,6 +3,7 @@ package it.nextworks.corda.flows;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferUtils;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
@@ -65,9 +66,15 @@ public class GetPkgsFlowTest {
 
     /** Function used to generate a transaction that will output a PkgOfferState */
     private void generatePkgOfferState() throws Exception {
+        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
+                PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
+                PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
+                PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPrice, PkgOfferUtils.testQuantity,
+                PkgOfferUtils.testValidFor);
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
-                PkgOfferUtils.testLink, PkgOfferUtils.testPrice, PkgOfferUtils.testPkgType);
+                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -91,17 +98,18 @@ public class GetPkgsFlowTest {
 
         assert (pkgOfferStateListList.size() == 1);
         PkgOfferState pkgOfferState = pkgOfferStateListList.get(0);
-        checkPkgOfferStateCorrectness(pkgOfferState, pkgOfferState.getLinearId());
+        checkPkgOfferStateCorrectness(pkgOfferState, pkgOfferState.getLinearId(), pkgOfferState.getPoPrice());
     }
 
-    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId,
+                                               @NotNull ProductOfferingPrice poPrice) {
         assertEquals(recordedState.getLinearId(), pkgId);
         assertEquals(recordedState.getName(), PkgOfferUtils.testName);
         assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
         assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
         assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
         assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
-        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPoPrice(), poPrice);
         assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));

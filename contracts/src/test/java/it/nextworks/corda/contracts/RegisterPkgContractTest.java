@@ -2,6 +2,7 @@ package it.nextworks.corda.contracts;
 
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.testing.core.TestIdentity;
 import net.corda.testing.node.MockServices;
@@ -22,13 +23,19 @@ public class RegisterPkgContractTest {
             new MockServices(ImmutableList.of(cordAppContractsPkg),
                     devTest, repositoryNodeTest);
 
+    private ProductOfferingPrice createProductOfferingPrice() {
+        return new ProductOfferingPrice(testPoId, testLink, testDescription, testIsBundle, testLastUpdate,
+                testLifecycleStatus, testPoName, testPercentage, testPriceType, testRecChargePeriodLength,
+                testRecChargePeriodType, testVersion, testPrice, testQuantity, testValidFor);
+    }
+
     /** Test that a transaction must include the RegisterPkg command */
     @Test
     public void transactionMustIncludeCreateCommand() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(PkgOfferContract.ID, new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty()));
                 tx.fails();
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -50,7 +57,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.input(PkgOfferContract.ID, pkgOfferState);
                 tx.output(PkgOfferContract.ID, pkgOfferState);
@@ -69,7 +76,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.output(PkgOfferContract.ID, pkgOfferState);
@@ -92,7 +99,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, null, testDescription, testVersion,
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -101,7 +108,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, "", testDescription, testVersion,
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -109,7 +116,7 @@ public class RegisterPkgContractTest {
                 });
 
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, " ", testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -129,7 +136,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, null, testVersion,
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -138,7 +145,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, "", testVersion,
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -146,7 +153,7 @@ public class RegisterPkgContractTest {
                 });
 
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, " ", testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -166,7 +173,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, null,
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -175,7 +182,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, "",
-                            testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                            testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -183,7 +190,7 @@ public class RegisterPkgContractTest {
                 });
 
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, " ",
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -203,7 +210,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                            null, testLink, testPrice, testPkgType, devTest.getParty(),
+                            null, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -212,7 +219,7 @@ public class RegisterPkgContractTest {
 
                 tx.tweak(tw -> {
                     PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                            "", testLink, testPrice, testPkgType, devTest.getParty(),
+                            "", testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                             repositoryNodeTest.getParty());
                     tw.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -220,7 +227,7 @@ public class RegisterPkgContractTest {
                 });
 
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        " ", testLink, testPrice, testPkgType, devTest.getParty(),
+                        " ", testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
 
@@ -236,7 +243,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, "httpfg://abc.come", testPrice, testPkgType,
+                        testPkgInfoId, "httpfg://abc.come", testPkgType, createProductOfferingPrice(),
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -253,13 +260,13 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, null, testPkgType,
+                        testPkgInfoId, testLink, testPkgType, null,
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new PkgOfferContract.Commands.RegisterPkg());
 
-                return tx.failsWith(price + strNullErr);
+                return tx.failsWith(poPrice + strNullErr);
             });
             return null;
         }));
@@ -270,7 +277,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, null,
+                        testPkgInfoId, testLink, null, createProductOfferingPrice(),
                         devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -288,7 +295,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, null,
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), null,
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -306,7 +313,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         null);
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -325,7 +332,7 @@ public class RegisterPkgContractTest {
             final TestIdentity devTestDupe = new TestIdentity(devTest.getName(), devTest.getKeyPair());
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         devTestDupe.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -343,7 +350,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(repositoryNodeTest.getPublicKey()),
@@ -361,7 +368,7 @@ public class RegisterPkgContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                        testPkgInfoId, testLink, testPrice, testPkgType, devTest.getParty(),
+                        testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(), devTest.getParty(),
                         repositoryNodeTest.getParty());
                 tx.output(PkgOfferContract.ID, pkgOfferState);
                 tx.command(ImmutableList.of(devTest.getPublicKey()),

@@ -16,7 +16,6 @@ public class PkgLicenseState implements ContractState {
 
     private final StateAndRef<PkgOfferState> pkgLicensed;
     private final Party buyer;
-    /* Here will be add the price of the package selected from a list of prices */
 
     /**
      * Constructor of the package License State representation

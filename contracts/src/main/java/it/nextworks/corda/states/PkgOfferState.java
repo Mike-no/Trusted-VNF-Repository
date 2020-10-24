@@ -2,6 +2,8 @@ package it.nextworks.corda.states;
 
 import com.sun.istack.NotNull;
 import it.nextworks.corda.contracts.PkgOfferContract;
+import it.nextworks.corda.states.productOfferingPrice.Money;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.LinearState;
@@ -10,6 +12,7 @@ import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
 import net.corda.core.serialization.CordaSerializable;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.List;
@@ -30,8 +33,8 @@ public class PkgOfferState implements LinearState {
     private final String version;
     private final String pkgInfoId;
     private final String imageLink;
-    private final Amount<Currency> price;
     private final PkgType pkgType;
+    private final ProductOfferingPrice poPrice;
 
     private final Party author;
     private final Party repositoryNode;
@@ -45,7 +48,7 @@ public class PkgOfferState implements LinearState {
      * @param version        version of this package
      * @param imageLink      customized marketplace cover art location of this package
      * @param pkgInfoId      id of package repository of this package
-     * @param price          price of this package
+     * @param poPrice        product offering price of this package
      * @param pkgType        package type: VNF or PNF
      * @param author         author of this package
      * @param repositoryNode Repository Node that will store this PkgOfferState in the vault
@@ -56,8 +59,8 @@ public class PkgOfferState implements LinearState {
                          String version,
                          String pkgInfoId,
                          String imageLink,
-                         Amount<Currency> price,
                          PkgType pkgType,
+                         ProductOfferingPrice poPrice,
                          Party author,
                          Party repositoryNode) {
         this.linearId       = linearId;
@@ -67,8 +70,8 @@ public class PkgOfferState implements LinearState {
         this.version        = version;
         this.pkgInfoId      = pkgInfoId;
         this.imageLink      = imageLink;
-        this.price          = price;        /* This will become a ProductOfferingPrice */
         this.pkgType        = pkgType;
+        this.poPrice        = poPrice;
 
         this.author         = author;
         this.repositoryNode = repositoryNode;
@@ -91,13 +94,19 @@ public class PkgOfferState implements LinearState {
 
     public String getImageLink() { return imageLink; }
 
-    public Amount<Currency> getPrice() { return price; }
+    public ProductOfferingPrice getPoPrice() { return poPrice; }
 
     public PkgType getPkgType() { return pkgType; }
 
     public Party getAuthor() { return author; }
 
     public Party getRepositoryNode() { return repositoryNode; }
+
+    public Amount<Currency> getPrice() {
+        Money money = poPrice.getPrice();
+        return Amount.fromDecimal(BigDecimal.valueOf(money.getValue()).setScale(2,
+                BigDecimal.ROUND_HALF_EVEN), Currency.getInstance(money.getUnit()));
+    }
 
     /**
      * This method will indicate who are the participants and required signers when

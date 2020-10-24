@@ -1,11 +1,10 @@
 package it.nextworks.corda.contracts;
 
 import it.nextworks.corda.states.PkgOfferState;
-import net.corda.core.contracts.Amount;
+import it.nextworks.corda.states.productOfferingPrice.Money;
+import it.nextworks.corda.states.productOfferingPrice.Quantity;
+import it.nextworks.corda.states.productOfferingPrice.TimePeriod;
 import net.corda.core.contracts.UniqueIdentifier;
-
-import java.util.Currency;
-import java.util.Locale;
 
 /** Simply a class with various utility functions and statements */
 public class PkgOfferUtils {
@@ -18,7 +17,7 @@ public class PkgOfferUtils {
     public static final String version             = "The <version>";
     public static final String imageLink           = "The <imageLink>";
     public static final String pkgInfoId           = "The <pkgInfoId>";
-    public static final String price               = "The <price>";
+    public static final String poPrice             = "The <poPrice>";
 
     public static final String author              = "The <author>";
     public static final String repositoryNode      = "The <repositoryNode>";
@@ -49,7 +48,19 @@ public class PkgOfferUtils {
     public static final String testVersion                = "1.0";
     public static final String testPkgInfoId              = "123";
     public static final String testLink                   = "https://www.nextworks.it/";
-    public static final Amount<Currency> testPrice        = new Amount<>(1,
-            Currency.getInstance(Locale.ITALY));
     public static final PkgOfferState.PkgType testPkgType = PkgOfferState.PkgType.VNF;
+
+    public static final String testPoId                   = "123456789";
+    public static final boolean testIsBundle              = false;
+    public static final String testLastUpdate             = "2017-08-27T00:00:00.0Z";
+    public static final String testLifecycleStatus        = "testLifecycleStatus";
+    public static final String testPoName                 = "testPo";
+    public static final float testPercentage              = 20;
+    public static final String testPriceType              = "testPriceType";
+    public static final int testRecChargePeriodLength     = 1;
+    public static final String testRecChargePeriodType    = "testChargePeriodType";
+    public static final Money testPrice                   = new Money("EUR", 1);
+    public static final Quantity testQuantity             = new Quantity(1, "test");
+    public static final TimePeriod testValidFor           = new TimePeriod("2020-10-23T16:42:23.0Z",
+            "2020-10-24T00:00:00.0Z");
 }

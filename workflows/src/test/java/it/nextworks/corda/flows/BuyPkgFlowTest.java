@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferUtils;
 import it.nextworks.corda.states.PkgLicenseState;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
@@ -81,9 +82,15 @@ public class BuyPkgFlowTest {
      * be used in a PkgLicenseState transaction as component of a PkgLicenseState
      */
     private PkgOfferState generatePkgOfferState() throws Exception {
+        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
+                PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
+                PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
+                PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPrice, PkgOfferUtils.testQuantity,
+                PkgOfferUtils.testValidFor);
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
-                PkgOfferUtils.testLink, PkgOfferUtils.testPrice, PkgOfferUtils.testPkgType);
+                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -201,7 +208,7 @@ public class BuyPkgFlowTest {
 
             final PkgLicenseState pkgLicenseState = tx.outputsOfType(PkgLicenseState.class).get(0);
             final PkgOfferState savedPkgOfferState = pkgLicenseState.getPkgLicensed().getState().getData();
-            checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId);
+            checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId, pkgOfferState.getPoPrice());
             assertEquals(pkgLicenseState.getBuyer(), buyerNodeTest.getInfo().getLegalIdentities().get(0));
         }
     }
@@ -228,7 +235,7 @@ public class BuyPkgFlowTest {
 
                 final PkgLicenseState pkgLicenseState = pkgLicenseStates.get(0).getState().getData();
                 final PkgOfferState savedPkgOfferState = pkgLicenseState.getPkgLicensed().getState().getData();
-                checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId);
+                checkPkgOfferStateCorrectness(savedPkgOfferState, pkgId, pkgOfferState.getPoPrice());
                 assertEquals(pkgLicenseState.getBuyer(), buyerNodeTest.getInfo().getLegalIdentities().get(0));
 
                 return null;
@@ -236,14 +243,15 @@ public class BuyPkgFlowTest {
         }
     }
 
-    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId,
+                                               @NotNull ProductOfferingPrice poPrice) {
         assertEquals(recordedState.getLinearId(), pkgId);
         assertEquals(recordedState.getName(), PkgOfferUtils.testName);
         assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
         assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
         assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
         assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
-        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPoPrice(), poPrice);
         assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));

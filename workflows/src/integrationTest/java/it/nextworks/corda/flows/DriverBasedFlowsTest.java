@@ -6,7 +6,9 @@ import it.nextworks.corda.contracts.PkgOfferUtils;
 import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgLicenseState;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.concurrent.CordaFuture;
+import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
@@ -24,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import rx.Observable;
 
+import java.util.Currency;
 import java.util.List;
 
 import static it.nextworks.corda.flows.DriverBasedFlowsTestUtils.*;
@@ -121,38 +124,46 @@ public class DriverBasedFlowsTest {
                         repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
 
                 /* Start the creation flow and verify that the pkg state has been stored in the vault of each node */
+                ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink,
+                        PkgOfferUtils.testDescription, PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate,
+                        PkgOfferUtils.testLifecycleStatus, PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage,
+                        PkgOfferUtils.testPriceType, PkgOfferUtils.testRecChargePeriodLength,
+                        PkgOfferUtils.testRecChargePeriodType, PkgOfferUtils.testVersion, PkgOfferUtils.testPrice,
+                        PkgOfferUtils.testQuantity, PkgOfferUtils.testValidFor);
                 SignedTransaction signedTransaction =
                         devHandle.getRpc().startFlowDynamic(RegisterPkgFlow.DevInitiation.class,
                             PkgOfferUtils.testName, PkgOfferUtils.testDescription, PkgOfferUtils.testVersion,
-                            PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
-                            PkgOfferUtils.testPkgType).getReturnValue().get();
-                UniqueIdentifier pkgId = ((PkgOfferState)signedTransaction.getTx().getOutput(0)).getLinearId();
+                            PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPkgType,
+                                poPrice).getReturnValue().get();
+                PkgOfferState pkgOfferState = (PkgOfferState)signedTransaction.getTx().getOutput(0);
+                UniqueIdentifier pkgId = pkgOfferState.getLinearId();
+                Amount<Currency> price = pkgOfferState.getPrice();
 
                 Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass =
                         (Class<Vault.Update<PkgOfferState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterCreatePkg(devVaultUpdates, pkgVaultUpdateClass, pkgId, devHandle, repositoryHandle);
-                checkVaultsAfterCreatePkg(repositoryPkgVaultUpdates, pkgVaultUpdateClass, pkgId, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(devVaultUpdates, pkgVaultUpdateClass, pkgId, poPrice, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(repositoryPkgVaultUpdates, pkgVaultUpdateClass, pkgId, poPrice, devHandle, repositoryHandle);
 
                 /* Start the get pkgs flow to get the pkgId of a the pkg as will be shown in the marketplace */
                 List<PkgOfferState> pkgOfferStateList =
                         buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class).getReturnValue().get();
                 assert (pkgOfferStateList.size() == 1);
-                PkgOfferState pkgOfferState = pkgOfferStateList.get(0);
-                UniqueIdentifier retrievedPkgId = pkgOfferState.getLinearId();
+                PkgOfferState retrievedPkgOfferState = pkgOfferStateList.get(0);
+                UniqueIdentifier retrievedPkgId = retrievedPkgOfferState.getLinearId();
 
                 /* Start the buy flow and verify that the license state has been stored in the vault of each node */
-                buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, PkgOfferUtils.testPrice)
+                buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, price)
                         .getReturnValue().get();
                 buyerHandle.getRpc().startFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class, retrievedPkgId,
-                        PkgOfferUtils.testPrice).getReturnValue().get();
+                        price).getReturnValue().get();
 
                 Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass =
                         (Class<Vault.Update<PkgLicenseState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterBuyPkg(buyerVaultUpdates, pkgLicenseUpdateClass, pkgId, devHandle,
+                checkVaultsAfterBuyPkg(buyerVaultUpdates, pkgLicenseUpdateClass, pkgId, poPrice, devHandle,
                         buyerHandle, repositoryHandle);
-                checkVaultsAfterBuyPkg(repositoryLicenseVaultUpdates, pkgLicenseUpdateClass, pkgId, devHandle,
+                checkVaultsAfterBuyPkg(repositoryLicenseVaultUpdates, pkgLicenseUpdateClass, pkgId, poPrice, devHandle,
                         buyerHandle, repositoryHandle);
             } catch(Exception e) {
                 throw new RuntimeException(integrationTestEx, e);
@@ -180,12 +191,13 @@ public class DriverBasedFlowsTest {
     private void checkVaultsAfterCreatePkg(@NotNull Observable<Vault.Update<PkgOfferState>> observer,
                                            @NotNull Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass,
                                            @NotNull UniqueIdentifier pkgId,
+                                           @NotNull ProductOfferingPrice poPrice,
                                            @NotNull NodeHandle devHandle,
                                            @NotNull NodeHandle repositoryHandle) {
         expectEvents(observer, true, () ->
                 expect(pkgVaultUpdateClass, update -> true, update -> {
                     PkgOfferState recordedState = update.getProduced().iterator().next().getState().getData();
-                    checkPkgOfferStateCorrectness(recordedState, pkgId,
+                    checkPkgOfferStateCorrectness(recordedState, pkgId, poPrice,
                             devHandle.getNodeInfo().getLegalIdentities().get(0),
                             repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
 
@@ -197,6 +209,7 @@ public class DriverBasedFlowsTest {
     private void checkVaultsAfterBuyPkg(@NotNull Observable<Vault.Update<PkgLicenseState>> observer,
                                         @NotNull Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass,
                                         @NotNull UniqueIdentifier pkgId,
+                                        @NotNull ProductOfferingPrice poPrice,
                                         @NotNull NodeHandle devHandle,
                                         @NotNull NodeHandle buyerHandle,
                                         @NotNull NodeHandle repositoryHandle) {
@@ -204,7 +217,7 @@ public class DriverBasedFlowsTest {
                 expect(pkgLicenseUpdateClass, update -> true, update -> {
                     PkgLicenseState recordedState = update.getProduced().iterator().next().getState().getData();
                     PkgOfferState pkgOfferState = recordedState.getPkgLicensed().getState().getData();
-                    checkPkgOfferStateCorrectness(pkgOfferState, pkgId,
+                    checkPkgOfferStateCorrectness(pkgOfferState, pkgId, poPrice,
                             devHandle.getNodeInfo().getLegalIdentities().get(0),
                             repositoryHandle.getNodeInfo().getLegalIdentities().get(0));
                     assertEquals(recordedState.getBuyer(), buyerHandle.getNodeInfo().getLegalIdentities().get(0));
@@ -216,6 +229,7 @@ public class DriverBasedFlowsTest {
 
     private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState,
                                                @NotNull UniqueIdentifier pkgId,
+                                               @NotNull ProductOfferingPrice poPrice,
                                                @NotNull Party author,
                                                @NotNull Party repositoryNode) {
         assertEquals(recordedState.getLinearId(), pkgId);
@@ -224,7 +238,7 @@ public class DriverBasedFlowsTest {
         assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
         assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
         assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
-        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPoPrice(), poPrice);
         assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), author);
         assertEquals(recordedState.getRepositoryNode(), repositoryNode);

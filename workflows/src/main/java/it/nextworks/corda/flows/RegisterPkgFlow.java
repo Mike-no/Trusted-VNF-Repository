@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferContract;
 import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.contracts.*;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
@@ -41,8 +42,8 @@ public class RegisterPkgFlow {
         private final String version;
         private final String pkgInfoId;
         private final String imageLink;
-        private final Amount<Currency> price;
         private final PkgOfferState.PkgType pkgType;
+        private final ProductOfferingPrice poPrice;
 
         private final Step GENERATING_TRANSACTION = new Step(RegisterPkgFlowUtils.GENERATING_TRANSACTION);
         private final Step VERIFYING_TRANSACTION  = new Step(RegisterPkgFlowUtils.VERIFYING_TRANSACTION);
@@ -80,23 +81,23 @@ public class RegisterPkgFlow {
          * @param version        version of the package to build in the transaction
          * @param pkgInfoId      pkg info id of the package to build in the transaction
          * @param imageLink      customized marketplace cover art location of the package to build in the transaction
-         * @param price          price of the package to build in the transaction
          * @param pkgType        type of the package (VNF or PNF) to build in the transaction
+         * @param poPrice        product offering price of the package to build in the transaction
          */
         public DevInitiation(String name,
                              String description,
                              String version,
                              String pkgInfoId,
                              String imageLink,
-                             Amount<Currency> price,
-                             PkgOfferState.PkgType pkgType) {
+                             PkgOfferState.PkgType pkgType,
+                             ProductOfferingPrice poPrice) {
             this.name           = name;
             this.description    = description;
             this.version        = version;
             this.pkgInfoId      = pkgInfoId;
             this.imageLink      = imageLink;
-            this.price          = price;
             this.pkgType        = pkgType;
+            this.poPrice        = poPrice;
         }
 
         @Override
@@ -125,7 +126,7 @@ public class RegisterPkgFlow {
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
             final PkgOfferState pkgOfferState = new PkgOfferState(new UniqueIdentifier(), name, description,
-                    version, pkgInfoId, imageLink, price, pkgType, author, repositoryNode);
+                    version, pkgInfoId, imageLink, pkgType, poPrice, author, repositoryNode);
             final Command<PkgOfferContract.Commands.RegisterPkg> txCommand = new Command<>(
                     new PkgOfferContract.Commands.RegisterPkg(), ImmutableList.of(author.getOwningKey(),
                     repositoryNode.getOwningKey()));

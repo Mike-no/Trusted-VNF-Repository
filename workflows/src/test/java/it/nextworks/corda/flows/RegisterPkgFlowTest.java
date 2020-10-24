@@ -3,6 +3,7 @@ package it.nextworks.corda.flows;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferUtils;
 import it.nextworks.corda.states.PkgOfferState;
+import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
@@ -65,9 +66,15 @@ public class RegisterPkgFlowTest {
     }
 
     private RegisterPkgFlow.DevInitiation createFlow() {
+        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
+                PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
+                PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
+                PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPrice, PkgOfferUtils.testQuantity,
+                PkgOfferUtils.testValidFor);
         return new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
-                PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPrice,
-                PkgOfferUtils.testPkgType);
+                PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink,
+                PkgOfferUtils.testPkgType, poPrice);
     }
 
     @Test
@@ -117,7 +124,8 @@ public class RegisterPkgFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
+        PkgOfferState pkgOfferState = ((PkgOfferState) signedTx.getTx().getOutput(0));
+        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -128,7 +136,7 @@ public class RegisterPkgFlowTest {
             assert (contractState instanceof PkgOfferState);
 
             PkgOfferState recordedState = (PkgOfferState) contractState;
-            checkPkgOfferStateCorrectness(recordedState, pkgId);
+            checkPkgOfferStateCorrectness(recordedState, pkgId, pkgOfferState.getPoPrice());
         }
     }
 
@@ -141,7 +149,8 @@ public class RegisterPkgFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTx = future.get();
-        UniqueIdentifier pkgId = ((PkgOfferState) signedTx.getTx().getOutput(0)).getLinearId();
+        PkgOfferState pkgOfferState = ((PkgOfferState) signedTx.getTx().getOutput(0));
+        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
                 List<StateAndRef<PkgOfferState>> pkgs = node.getServices().getVaultService()
@@ -149,28 +158,29 @@ public class RegisterPkgFlowTest {
                 assertEquals(pkgs.size(), 1);
 
                 PkgOfferState recordedState = pkgs.get(0).getState().getData();
-                checkPkgOfferStateCorrectness(recordedState, pkgId);
+                checkPkgOfferStateCorrectness(recordedState, pkgId, pkgOfferState.getPoPrice());
 
                 return null;
             });
         }
     }
 
-    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId) {
+    private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId,
+                                               @NotNull ProductOfferingPrice poPrice) {
         assertEquals(recordedState.getLinearId(), pkgId);
         assertEquals(recordedState.getName(), PkgOfferUtils.testName);
         assertEquals(recordedState.getDescription(), PkgOfferUtils.testDescription);
         assertEquals(recordedState.getVersion(), PkgOfferUtils.testVersion);
         assertEquals(recordedState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
         assertEquals(recordedState.getImageLink(), PkgOfferUtils.testLink);
-        assertEquals(recordedState.getPrice(), PkgOfferUtils.testPrice);
+        assertEquals(recordedState.getPoPrice(), poPrice);
         assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), devNodeTest.getInfo().getLegalIdentities().get(0));
         assertEquals(recordedState.getRepositoryNode(), repositoryNodeTest.getInfo().getLegalIdentities().get(0));
     }
 
     @Test
-    public void feeAgreementMustBeEstablished() throws Exception {
+    public void feeAgreementMustBeEstablished() {
         RegisterPkgFlow.DevInitiation flow = createFlow();
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
