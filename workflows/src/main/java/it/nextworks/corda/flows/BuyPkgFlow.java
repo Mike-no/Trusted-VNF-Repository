@@ -97,8 +97,15 @@ public class BuyPkgFlow {
          * Constructor of the Initiating flow class,
          * the following parameters will be used to build the transaction
          * @param pkgId ID of the package to buy
+         * @param price price of the package
          */
         public PkgBuyerInitiation(UniqueIdentifier pkgId, Amount<Currency> price) {
+            if(pkgId == null)
+                throw new IllegalArgumentException(nullPkgId);
+
+            if(price == null)
+                throw new IllegalArgumentException(nullPrice);
+
             this.pkgId = pkgId;
             this.price = price;
         }

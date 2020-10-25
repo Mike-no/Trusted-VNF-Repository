@@ -1,6 +1,9 @@
 package it.nextworks.corda.flows;
 
 public class BuyPkgFlowUtils {
+    public static final String nullPkgId              = "The <PkgId> parameter cannot be null.";
+    public static final String nullPrice              = "The <price> parameter cannot be null.";
+
     public static final String receivedTooMuchStates  = "Received more than one PkgOfferState: " +
             "require only the requested PkgOfferState";
     public static final String requestedPkgErr        = "The received package differ from the requested one.";

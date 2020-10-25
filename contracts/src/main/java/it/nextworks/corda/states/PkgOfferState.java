@@ -11,6 +11,7 @@ import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
 import net.corda.core.serialization.CordaSerializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -94,9 +95,9 @@ public class PkgOfferState implements LinearState {
 
     public String getImageLink() { return imageLink; }
 
-    public ProductOfferingPrice getPoPrice() { return poPrice; }
-
     public PkgType getPkgType() { return pkgType; }
+
+    public ProductOfferingPrice getPoPrice() { return poPrice; }
 
     public Party getAuthor() { return author; }
 
@@ -117,5 +118,21 @@ public class PkgOfferState implements LinearState {
     @Override
     public List<AbstractParty> getParticipants() {
         return Arrays.asList(author, repositoryNode);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("linearId", linearId)
+                .append("name", name)
+                .append("description", description)
+                .append("version", version)
+                .append("pkgInfoId", pkgInfoId)
+                .append("imageLink", imageLink)
+                .append("pkgType", pkgType.name())
+                .append("poPrice", poPrice)
+                .append("author", author)
+                .append("repositoryNode", repositoryNode)
+                .toString();
     }
 }

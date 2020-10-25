@@ -50,8 +50,8 @@ public class PkgOfferContract implements Contract {
                 } catch (MalformedURLException mue) {
                     throw new IllegalArgumentException(imageLink + strMueErr);
                 }
-                require.using(poPrice + strNullErr, output.getPoPrice() != null);
                 require.using(pkgTypeErr, output.getPkgType() != null);
+                require.using(poPrice + strNullErr, output.getPoPrice() != null);
 
                 final Party author = output.getAuthor();
                 final Party repositoryNode = output.getRepositoryNode();

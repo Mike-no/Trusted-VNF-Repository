@@ -1,6 +1,9 @@
 package it.nextworks.corda.states.productOfferingPrice;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import net.corda.core.serialization.CordaSerializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -9,15 +12,17 @@ import java.util.Date;
 @CordaSerializable
 public class TimePeriod {
 
-    private final String startDateTime;
-    private final String endDateTime;
+    @JsonProperty(value = "startDateTime") private final String startDateTime;
+    @JsonProperty(value = "endDateTime") private final String endDateTime;
 
     /**
      * Constructor of the TimePeriod class.
      * @param startDateTime start of the time period
      * @param endDateTime   end of the time period
      */
-    public TimePeriod(String startDateTime, String endDateTime) {
+    @JsonCreator
+    public TimePeriod(@JsonProperty(value = "startDateTime") String startDateTime,
+                      @JsonProperty(value = "endDateTime") String endDateTime) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.'0Z'");
         dateFormat.setLenient(false);
 
@@ -65,5 +70,12 @@ public class TimePeriod {
             return false;
 
         return true;
+    }
+
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("startDateTime", startDateTime)
+                .append("endDateTime", endDateTime)
+                .toString();
     }
 }

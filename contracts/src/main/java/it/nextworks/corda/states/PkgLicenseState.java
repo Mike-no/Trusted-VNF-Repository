@@ -6,6 +6,7 @@ import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -46,5 +47,13 @@ public class PkgLicenseState implements ContractState {
     @Override
     public List<AbstractParty> getParticipants() {
         return Arrays.asList(buyer, pkgLicensed.getState().getData().getRepositoryNode());
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("pkgLicensed", pkgLicensed)
+                .append("buyer", buyer)
+                .toString();
     }
 }

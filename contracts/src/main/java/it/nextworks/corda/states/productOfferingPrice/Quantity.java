@@ -1,19 +1,23 @@
 package it.nextworks.corda.states.productOfferingPrice;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import net.corda.core.serialization.CordaSerializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @CordaSerializable
 public class Quantity {
 
-    private final float amount;
-    private final String unit;
+    @JsonProperty(value = "amount") private final float amount;
+    @JsonProperty(value = "unit") private final String unit;
 
     /**
      * Constructor of the Quantity class.
      * @param amount Numeric value in a given unit
      * @param unit   unit
      */
-    public Quantity(float amount, String unit) {
+    @JsonCreator
+    public Quantity(@JsonProperty(value = "amount") float amount, @JsonProperty(value = "unit") String unit) {
         if(amount < 0)
             throw new IllegalArgumentException("The <amount> parameter cannot be negative.");
 
@@ -48,5 +52,12 @@ public class Quantity {
             return false;
 
         return true;
+    }
+
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("amount", amount)
+                .append("unit", unit)
+                .toString();
     }
 }

@@ -1,6 +1,9 @@
 package it.nextworks.corda.states.productOfferingPrice;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import net.corda.core.serialization.CordaSerializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,21 +14,21 @@ import java.util.List;
 @CordaSerializable
 public class ProductOfferingPrice {
 
-    private final String id;
-    private final String href;
-    private final String description;
-    private final Boolean isBundle;
-    private final String lastUpdate;
-    private final String lifecycleStatus;
-    private final String name;
-    private final float percentage;
-    private final String priceType;
-    private final int recurringChargePeriodLength;
-    private final String recurringChargePeriodType;
-    private final String version;
-    private final Money price;
-    private final Quantity unitOfMeasure;
-    private final TimePeriod validFor;
+    @JsonProperty("id") private final String id;
+    @JsonProperty("href") private final String href;
+    @JsonProperty("description") private final String description;
+    @JsonProperty("isBundle") private final Boolean isBundle;
+    @JsonProperty("lastUpdate") private final String lastUpdate;
+    @JsonProperty("lifecycleStatus") private final String lifecycleStatus;
+    @JsonProperty("name") private final String name;
+    @JsonProperty("percentage") private final float percentage;
+    @JsonProperty("priceType") private final String priceType;
+    @JsonProperty("recurringChargePeriodLength") private final int recurringChargePeriodLength;
+    @JsonProperty("recurringChargePeriodType") private final String recurringChargePeriodType;
+    @JsonProperty("version") private final String version;
+    @JsonProperty("price") private final Money price;
+    @JsonProperty("unitOfMeasure") private final Quantity unitOfMeasure;
+    @JsonProperty("validFor") private final TimePeriod validFor;
 
     private final List<TaxItem> tax = null;
     private final List<ProductOfferingTerm> productOfferingTerm = null;
@@ -56,21 +59,22 @@ public class ProductOfferingPrice {
      *                                    a rate, or a discount.
      * @param validFor                    The period for which the productOfferingPrice is valid.
      */
-    public ProductOfferingPrice(String id,
-                                String href,
-                                String description,
-                                Boolean isBundle,
-                                String lastUpdate,
-                                String lifecycleStatus,
-                                String name,
-                                float percentage,
-                                String priceType,
-                                int recurringChargePeriodLength,
-                                String recurringChargePeriodType,
-                                String version,
-                                Money price,
-                                Quantity unitOfMeasure,
-                                TimePeriod validFor) {
+    @JsonCreator
+    public ProductOfferingPrice(@JsonProperty("id") String id,
+                                @JsonProperty("href")String href,
+                                @JsonProperty("description") String description,
+                                @JsonProperty("isBundle") Boolean isBundle,
+                                @JsonProperty("lastUpdate") String lastUpdate,
+                                @JsonProperty("lifecycleStatus") String lifecycleStatus,
+                                @JsonProperty("name") String name,
+                                @JsonProperty("percentage") float percentage,
+                                @JsonProperty("priceType") String priceType,
+                                @JsonProperty("recurringChargePeriodLength") int recurringChargePeriodLength,
+                                @JsonProperty("recurringChargePeriodType") String recurringChargePeriodType,
+                                @JsonProperty("version") String version,
+                                @JsonProperty("price") Money price,
+                                @JsonProperty("unitOfMeasure") Quantity unitOfMeasure,
+                                @JsonProperty("validFor") TimePeriod validFor) {
         if(notWellFormatted(id))
             throw new IllegalArgumentException("The <id> parameter" + err);
 
@@ -230,5 +234,26 @@ public class ProductOfferingPrice {
             return false;
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("id", id)
+                .append("href", href)
+                .append("description", description)
+                .append("isBundle", isBundle)
+                .append("lastUpdate", lastUpdate)
+                .append("lifecycleStatus", lifecycleStatus)
+                .append("name", name)
+                .append("percentage", percentage)
+                .append("priceType", priceType)
+                .append("recurringChargePeriodLength", recurringChargePeriodLength)
+                .append("recurringChargePeriodType", recurringChargePeriodType)
+                .append("version", version)
+                .append("price",price)
+                .append("unitOfMeasure", unitOfMeasure)
+                .append("validFor", validFor)
+                .toString();
     }
 }
