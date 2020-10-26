@@ -83,9 +83,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, buyerTest.getParty()));
@@ -113,9 +113,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, buyerTest.getParty()));
@@ -143,9 +143,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(200,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, buyerTest.getParty()));
@@ -172,9 +172,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, null));
@@ -201,9 +201,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, repositoryNodeTest.getParty()));
@@ -230,9 +230,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(devTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, devTest.getParty()));
@@ -259,9 +259,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, buyerTest.getParty()));
@@ -288,9 +288,9 @@ public class BuyPkgContractTest {
             ledger.transaction(tx -> {
                 Cash.State inputCash = createCashState(buyerTest.getParty(), new Amount<>(100,
                         Currency.getInstance(Locale.ITALY)));
-                tx.input(Cash.class.getName(), inputCash);
+                tx.input(Cash.PROGRAM_ID, inputCash);
 
-                tx.output(Cash.class.getName(), inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
+                tx.output(Cash.PROGRAM_ID, inputCash.withNewOwner(repositoryNodeTest.getParty()).getOwnableState());
 
                 StateAndRef<PkgOfferState> pkgLicensed = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeLicensed);
                 tx.output(PkgLicenseContract.ID, new PkgLicenseState(pkgLicensed, buyerTest.getParty()));

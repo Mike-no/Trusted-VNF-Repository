@@ -18,7 +18,13 @@ import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.utilities.ProgressTracker.Step;
 import net.corda.finance.workflows.asset.CashUtils;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.PublicKey;
 import java.util.Currency;
 import java.util.List;
@@ -51,6 +57,14 @@ public class BuyPkgFlow {
         }
     }
 
+    /**
+     * This exception will be thrown if an error occur while sending the http
+     * request to the 5g-catalogue.
+     */
+    public static class CannotPerformPkgRegister extends FlowException {
+        public CannotPerformPkgRegister(String msg) { super(msg); }
+    }
+
     @InitiatingFlow
     @StartableByRPC
     public static class PkgBuyerInitiation extends FlowLogic<SignedTransaction> {
@@ -58,7 +72,10 @@ public class BuyPkgFlow {
         private final UniqueIdentifier pkgId;
         private final Amount<Currency> price;
 
+        private final String httpRequest;
+
         private final Step SENDING_PKG_ID         = new Step(BuyPkgFlowUtils.SENDING_PKG_ID);
+        private final Step SENDING_PATH_REQUEST   = new Step(BuyPkgFlowUtils.SENDING_PATH_REQUEST);
         private final Step RECEIVING_PKG_INFO     = new Step(BuyPkgFlowUtils.RECEIVING_PKG_INFO);
         private final Step VERIFYING_PKG_INFO     = new Step(BuyPkgFlowUtils.VERIFYING_PKG_INFO);
         private final Step GENERATING_TRANSACTION = new Step(BuyPkgFlowUtils.GENERATING_TRANSACTION);
@@ -84,6 +101,7 @@ public class BuyPkgFlow {
          */
         private final ProgressTracker progressTracker = new ProgressTracker(
                 SENDING_PKG_ID,
+                SENDING_PATH_REQUEST,
                 RECEIVING_PKG_INFO,
                 VERIFYING_PKG_INFO,
                 GENERATING_TRANSACTION,
@@ -99,7 +117,7 @@ public class BuyPkgFlow {
          * @param pkgId ID of the package to buy
          * @param price price of the package
          */
-        public PkgBuyerInitiation(UniqueIdentifier pkgId, Amount<Currency> price) {
+        public PkgBuyerInitiation(UniqueIdentifier pkgId, Amount<Currency> price, String httpRequest) {
             if(pkgId == null)
                 throw new IllegalArgumentException(nullPkgId);
 
@@ -108,6 +126,7 @@ public class BuyPkgFlow {
 
             this.pkgId = pkgId;
             this.price = price;
+            this.httpRequest = httpRequest;
         }
 
         @Override
@@ -137,6 +156,11 @@ public class BuyPkgFlow {
 
             FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
             repositoryNodeSession.send(pkgId);
+
+            /* Set the current step to SENDING_PATH_REQUEST and proceed to send the base path pf the http request */
+            progressTracker.setCurrentStep(SENDING_PATH_REQUEST);
+
+            repositoryNodeSession.send(httpRequest);
 
             /* Set the current step to RECEIVING_PKG_INFO and proceed to retrieve the package info */
             progressTracker.setCurrentStep(RECEIVING_PKG_INFO);
@@ -216,6 +240,7 @@ public class BuyPkgFlow {
 
         private final Step AWAITING_PKG_ID        = new Step(BuyPkgFlowUtils.AWAITING_PKG_ID);
         private final Step VERIFYING_RCV_DATA     = new Step(BuyPkgFlowUtils.VERIFYING_RCV_DATA);
+        private final Step AWAITING_PATH_REQUEST  = new Step(BuyPkgFlowUtils.AWAITING_PATH_REQUEST);
         private final Step SENDING_PKG_INFO       = new Step(BuyPkgFlowUtils.SENDING_PKG_INFO);
         private final Step FINALISING_TRANSACTION = new Step(BuyPkgFlowUtils.FINALISING_TRANSACTION) {
             @Override
@@ -233,6 +258,7 @@ public class BuyPkgFlow {
         private final ProgressTracker progressTracker = new ProgressTracker(
                 AWAITING_PKG_ID,
                 VERIFYING_RCV_DATA,
+                AWAITING_PATH_REQUEST,
                 SENDING_PKG_INFO,
                 FINALISING_TRANSACTION,
                 SENDING_CASH_TO_AUTHOR
@@ -294,6 +320,25 @@ public class BuyPkgFlow {
                 return lst.get(0);
             });
 
+            /* Set the current step to AWAITING_PATH_REQUEST and proceed to call */
+            progressTracker.setCurrentStep(AWAITING_PATH_REQUEST);
+
+            String httpRequest = buyerSession.receive(String.class).unwrap(data -> {
+                /* Set the current step to VERIFYING_RCV_DATA and proceed to verify the received data */
+                progressTracker.setCurrentStep(VERIFYING_RCV_DATA);
+
+                try {
+                    new URL(data);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException(notBasePathErr);
+                }
+
+                return data;
+            });
+
+            /* Verify that the package has been on-boarded on the 5g-catalogue so it can be purchased */
+            isPurchasable(pkgStateAndRef.getState().getData(), httpRequest);
+
             /* Set the current step to SENDING_PKG_INFO and proceed to send the requested package info */
             progressTracker.setCurrentStep(SENDING_PKG_INFO);
 
@@ -324,6 +369,26 @@ public class BuyPkgFlow {
                     pkgLicenseState.getPkgLicensed().getState().getData().getAuthor()));
 
             return stx;
+        }
+
+        @Suspendable
+        private void isPurchasable(PkgOfferState pkgOfferState, String httpRequest) throws CannotPerformPkgRegister {
+            if(pkgOfferState.getPkgType().equals(PkgOfferState.PkgType.VNF))
+                httpRequest += "vnfpkgm/v1/vnf_packages/";
+            else
+                httpRequest += "nsd/v1/pnf_descriptors/";
+            httpRequest += pkgOfferState.getPkgInfoId();
+
+            final Request request = new Request.Builder().url(httpRequest)
+                    .addHeader("Accept", "application/json").build();
+            try {
+                Response httpResponse = new OkHttpClient().newCall(request).execute();
+                if(!httpResponse.isSuccessful())
+                    throw new CannotPerformPkgRegister(httpResponse.body().string());
+                httpResponse.close();
+            } catch(IOException e) {
+                throw new CannotPerformPkgRegister(e.getMessage());
+            }
         }
     }
 }

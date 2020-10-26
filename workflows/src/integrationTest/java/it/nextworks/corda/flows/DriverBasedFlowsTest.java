@@ -134,7 +134,7 @@ public class DriverBasedFlowsTest {
                         devHandle.getRpc().startFlowDynamic(RegisterPkgFlow.DevInitiation.class,
                             PkgOfferUtils.testName, PkgOfferUtils.testDescription, PkgOfferUtils.testVersion,
                             PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink, PkgOfferUtils.testPkgType,
-                                poPrice).getReturnValue().get();
+                                poPrice, httpRequest).getReturnValue().get();
                 PkgOfferState pkgOfferState = (PkgOfferState)signedTransaction.getTx().getOutput(0);
                 UniqueIdentifier pkgId = pkgOfferState.getLinearId();
                 Amount<Currency> price = pkgOfferState.getPrice();
@@ -156,7 +156,7 @@ public class DriverBasedFlowsTest {
                 buyerHandle.getRpc().startFlowDynamic(SelfIssueCashFlow.class, price)
                         .getReturnValue().get();
                 buyerHandle.getRpc().startFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class, retrievedPkgId,
-                        price).getReturnValue().get();
+                        price, httpRequest).getReturnValue().get();
 
                 Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass =
                         (Class<Vault.Update<PkgLicenseState>>)(Class<?>)Vault.Update.class;

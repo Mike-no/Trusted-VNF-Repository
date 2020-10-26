@@ -74,7 +74,7 @@ public class GetPkgsFlowTest {
                 PkgOfferUtils.testValidFor);
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
-                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice);
+                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice, httpRequest);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();

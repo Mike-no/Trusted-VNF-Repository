@@ -16,9 +16,14 @@ import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.utilities.ProgressTracker.Step;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Currency;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
@@ -30,6 +35,14 @@ public class RegisterPkgFlow {
      */
     public static class NotExistingAgreementException extends FlowException {
         public NotExistingAgreementException() { super(notExistingAgreement); }
+    }
+
+    /**
+     * This exception will be thrown if an error occur while sending the http
+     * request to the 5g-catalogue.
+     */
+    public static class CannotPerformPkgRegister extends FlowException {
+        public CannotPerformPkgRegister(String msg) { super(msg); }
     }
 
 
@@ -45,6 +58,9 @@ public class RegisterPkgFlow {
         private final PkgOfferState.PkgType pkgType;
         private final ProductOfferingPrice poPrice;
 
+        private final String httpRequest;
+
+        private final Step SENDING_PATH_REQUEST   = new Step(RegisterPkgFlowUtils.SENDING_PATH_REQUEST);
         private final Step GENERATING_TRANSACTION = new Step(RegisterPkgFlowUtils.GENERATING_TRANSACTION);
         private final Step VERIFYING_TRANSACTION  = new Step(RegisterPkgFlowUtils.VERIFYING_TRANSACTION);
         private final Step SIGNING_TRANSACTION    = new Step(RegisterPkgFlowUtils.SIGNING_TRANSACTION);
@@ -67,6 +83,7 @@ public class RegisterPkgFlow {
          * function.
          */
         private final ProgressTracker progressTracker = new ProgressTracker(
+                SENDING_PATH_REQUEST,
                 GENERATING_TRANSACTION,
                 VERIFYING_TRANSACTION,
                 SIGNING_TRANSACTION,
@@ -90,7 +107,8 @@ public class RegisterPkgFlow {
                              String pkgInfoId,
                              String imageLink,
                              PkgOfferState.PkgType pkgType,
-                             ProductOfferingPrice poPrice) {
+                             ProductOfferingPrice poPrice,
+                             String httpRequest) {
             this.name           = name;
             this.description    = description;
             this.version        = version;
@@ -98,6 +116,8 @@ public class RegisterPkgFlow {
             this.imageLink      = imageLink;
             this.pkgType        = pkgType;
             this.poPrice        = poPrice;
+
+            this.httpRequest    = httpRequest;
         }
 
         @Override
@@ -121,6 +141,12 @@ public class RegisterPkgFlow {
             final Party repositoryNode = getServiceHub()
                     .getNetworkMapCache()
                     .getPeerByLegalName(CordaX500Name.parse(repositoryX500Name));
+
+            /* Set the current step to SENDING_PATH_REQUEST and proceed to send the base path of the http request */
+            progressTracker.setCurrentStep(SENDING_PATH_REQUEST);
+
+            FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
+            repositoryNodeSession.send(httpRequest);
 
             /* Set the current step to GENERATING_TRANSACTION and proceed to build the latter */
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
@@ -147,7 +173,6 @@ public class RegisterPkgFlow {
             /* Set the current step to GATHERING_SIGNS and starts a gathering sub-flow */
             progressTracker.setCurrentStep(GATHERING_SIGNS);
 
-            FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
             final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(partSignedTx,
                     ImmutableList.of(repositoryNodeSession)));
 
@@ -163,6 +188,26 @@ public class RegisterPkgFlow {
 
         private final FlowSession devSession;
 
+        private final Step AWAITING_PATH_REQUEST  = new Step(RegisterPkgFlowUtils.AWAITING_PATH_REQUEST);
+        private final Step VERIFYING_RCV_DATA     = new Step(RegisterPkgFlowUtils.VERIFYING_RCV_DATA);
+        private final Step FINALISING_TRANSACTION = new Step(RegisterPkgFlowUtils.FINALISING_TRANSACTION) {
+            @Override
+            public ProgressTracker childProgressTracker() {
+                return FinalityFlow.Companion.tracker();
+            }
+        };
+
+        /**
+         * The progress tracker checkpoints each stage of the flow and outputs the specified messages when each
+         * checkpoint is reached in the code. See the 'progressTracker.currentStep' expressions within the call()
+         * function.
+         */
+        private final ProgressTracker progressTracker = new ProgressTracker(
+                AWAITING_PATH_REQUEST,
+                VERIFYING_RCV_DATA,
+                FINALISING_TRANSACTION
+        );
+
         /**
          * Constructor of the flow initiated by the DevInitiation class
          * @param devSession session with the developer that want to submit his package
@@ -171,12 +216,21 @@ public class RegisterPkgFlow {
             this.devSession = devSession;
         }
 
+        @Override
+        public ProgressTracker getProgressTracker() {
+            return progressTracker;
+        }
+
         @Suspendable
         @Override
         public SignedTransaction call() throws FlowException {
             class SignTxFlow extends SignTransactionFlow {
-                private SignTxFlow(FlowSession devSession, ProgressTracker progressTracker) {
+
+                private String httpRequest;
+
+                private SignTxFlow(FlowSession devSession, ProgressTracker progressTracker, String httpRequest) {
                     super(devSession, progressTracker);
+                    this.httpRequest = httpRequest;
                 }
 
                 /**
@@ -184,10 +238,13 @@ public class RegisterPkgFlow {
                  * repositoryNode when accepts new package
                  */
                 @Override
-                protected void checkTransaction(@NotNull SignedTransaction stx) throws NotExistingAgreementException {
+                protected void checkTransaction(@NotNull SignedTransaction stx)
+                        throws NotExistingAgreementException, CannotPerformPkgRegister {
                     ContractState output = stx.getTx().getOutputs().get(0).getData();
                     if(!(output instanceof PkgOfferState))
                         throw new IllegalArgumentException(notPkgStateErr);
+
+                    /* Verify that a fee agreement exists between the developer and the repository node */
 
                     QueryCriteria.VaultQueryCriteria queryCriteria =
                             new QueryCriteria.VaultQueryCriteria()
@@ -197,16 +254,57 @@ public class RegisterPkgFlow {
                             getServiceHub().getVaultService().queryBy(FeeAgreementState.class, queryCriteria).getStates();
                     if(lst.isEmpty())
                         throw new NotExistingAgreementException();
+
+                    /* Verify that the package has been on-boarded on the 5g-catalogue */
+
+                    PkgOfferState pkgOfferState = (PkgOfferState)output;
+                    if(pkgOfferState.getPkgType().equals(PkgOfferState.PkgType.VNF))
+                        httpRequest += "vnfpkgm/v1/vnf_packages/";
+                    else
+                        httpRequest += "nsd/v1/pnf_descriptors/";
+                    httpRequest += pkgOfferState.getPkgInfoId();
+
+                    final Request request = new Request.Builder().url(httpRequest)
+                            .addHeader("Accept", "application/json").build();
+                    try {
+                        Response httpResponse = new OkHttpClient().newCall(request).execute();
+                        if(!httpResponse.isSuccessful())
+                            throw new CannotPerformPkgRegister(httpResponse.body().string());
+                        httpResponse.close();
+                    } catch(IOException e) {
+                        throw new CannotPerformPkgRegister(e.getMessage());
+                    }
                 }
             }
+
+            /* Set the current step to AWAITING_PATH_REQUEST and proceed to call */
+            progressTracker.setCurrentStep(AWAITING_PATH_REQUEST);
+
+            String httpRequest = devSession.receive(String.class).unwrap(data -> {
+                /* Set the current step to VERIFYING_RCV_DATA and proceed to verify the received data */
+                progressTracker.setCurrentStep(VERIFYING_RCV_DATA);
+
+                try {
+                    new URL(data);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException(notBasePathErr);
+                }
+
+                return data;
+            });
+
             /* Check and Sign the transaction, get the hash value of the obtained transaction */
-            final SignTxFlow signTxFlow = new SignTxFlow(devSession, SignTransactionFlow.Companion.tracker());
+            final SignTxFlow signTxFlow = new SignTxFlow(devSession,
+                    SignTransactionFlow.Companion.tracker(), httpRequest);
             final SecureHash txId = subFlow(signTxFlow).getId();
 
             /*
+             * Set the current step to FINALISING_TRANSACTION and starts a finalising sub-flow
              * Receive the transaction that will be stored in the vault and compare it's hash value
              * with the previously saved hash; if it's the same, proceed storing the transaction
              */
+            progressTracker.setCurrentStep(FINALISING_TRANSACTION);
+
             return subFlow(new ReceiveFinalityFlow(devSession, txId));
         }
     }

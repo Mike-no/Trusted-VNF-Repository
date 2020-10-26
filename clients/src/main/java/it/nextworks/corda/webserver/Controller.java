@@ -249,12 +249,7 @@ public class Controller {
     }
 
     @PostMapping(value = "register-pkg", produces = TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> registerPkg(@RequestParam(required = false)String project,
-                                              @RequestBody RegisterPkgWrapper wrapper) {
-        if(project == null) {
-            project = "admin";
-        }
-
+    public ResponseEntity<String> registerPkg(@RequestBody RegisterPkgWrapper wrapper) {
         String pkgInfoId = wrapper.getPkgInfoId();
         PkgOfferState.PkgType pkgType = wrapper.getPkgType();
         if(pkgInfoId == null || pkgType == null)
@@ -263,11 +258,11 @@ public class Controller {
 
         String request;
         if(pkgType.equals(PkgOfferState.PkgType.VNF))
-            request = catalogueURL + "vnfpkgm/v1/vnf_packages/" + pkgInfoId;
+            request = catalogueURL + "vnfpkgm/v1/vnf_packages/";
         else
-            request = catalogueURL + "nsd/v1/pnf_descriptors/" + pkgInfoId;
+            request = catalogueURL + "nsd/v1/pnf_descriptors/";
+        request += pkgInfoId;
 
-        request = request + "?project=" + project;
         logger.info("GET " + request);
 
         try {
@@ -342,7 +337,7 @@ public class Controller {
             Amount<Currency> price = Amount.fromDecimal(BigDecimal.valueOf(money.getValue()).setScale(2,
                     BigDecimal.ROUND_HALF_EVEN), Currency.getInstance(money.getUnit()));
             SignedTransaction result = proxy.startTrackedFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class,
-                    wrapper.getLinearId(), price).getReturnValue().get();
+                    wrapper.getLinearId(), price, catalogueURL).getReturnValue().get();
             logger.info(pkgPurchased);
             return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
                     " committed to ledger.\n" + result.getTx().outputsOfType(PkgLicenseState.class).get(0));

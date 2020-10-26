@@ -1,9 +1,7 @@
 package it.nextworks.corda.contracts;
 
 import it.nextworks.corda.states.PkgOfferState;
-import net.corda.core.contracts.CommandData;
-import net.corda.core.contracts.CommandWithParties;
-import net.corda.core.contracts.Contract;
+import net.corda.core.contracts.*;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.LedgerTransaction;
 
@@ -70,8 +68,45 @@ public class PkgOfferContract implements Contract {
             });
         }
         else if(commandData instanceof Commands.UpdatePkg) {
-            // TODO
-            System.out.println("Not Implemented.");
+            requireThat(require -> {
+                final List<ContractState> inputs = tx.getInputStates();
+                require.using(updatePkgInputErr, inputs.size() == 1);
+                require.using(updatePkgInputTypeErr, inputs.get(0) instanceof PkgOfferState);
+                final PkgOfferState inputPkgOfferState = tx.inputsOfType(PkgOfferState.class).get(0);
+
+                final List<ContractState> outputs = tx.getOutputStates();
+                require.using(updatePkgOutputErr, outputs.size() == 1);
+                require.using(updatePkgOutputTypeErr, outputs.get(0) instanceof PkgOfferState);
+                final PkgOfferState outputPkgOfferState = tx.outputsOfType(PkgOfferState.class).get(0);
+
+                require.using(updateLinearIdErr, inputPkgOfferState.getLinearId().equals(outputPkgOfferState.getLinearId()));
+
+                require.using(name + strErrMsg, isWellFormatted(outputPkgOfferState.getName()));
+                require.using(description + strErrMsg, isWellFormatted(outputPkgOfferState.getDescription()));
+                require.using(version + strErrMsg, isWellFormatted(outputPkgOfferState.getVersion()));
+                require.using(pkgInfoId + strErrMsg, isWellFormatted(outputPkgOfferState.getPkgInfoId()));
+                try {
+                    new URL(outputPkgOfferState.getImageLink());
+                } catch (MalformedURLException mue) {
+                    throw new IllegalArgumentException(imageLink + strMueErr);
+                }
+                require.using(updatePkgTypeErr, inputPkgOfferState.getPkgType().equals(outputPkgOfferState.getPkgType()));
+                require.using(poPrice + strNullErr, outputPkgOfferState.getPoPrice() != null);
+
+                final Party author = outputPkgOfferState.getAuthor();
+                final Party repositoryNode = outputPkgOfferState.getRepositoryNode();
+                require.using(updateAuthorErr, inputPkgOfferState.getAuthor().equals(author));
+                require.using(updateRepositoryNodeErr, inputPkgOfferState.getRepositoryNode().equals(repositoryNode));
+
+                final List<PublicKey> requiredSigners = command.getSigners();
+                require.using(twoSignersErr, requiredSigners.size() == 2);
+
+                final List<PublicKey> expectedSigners = Arrays.asList(author.getOwningKey(),
+                        repositoryNode.getOwningKey());
+                require.using(mustBeSignersErr, requiredSigners.containsAll(expectedSigners));
+
+                return null;
+            });
         }
         else if(commandData instanceof Commands.DeletePkg) {
             // TODO

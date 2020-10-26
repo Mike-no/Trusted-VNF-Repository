@@ -9,8 +9,10 @@ import net.corda.core.contracts.UniqueIdentifier;
 /** Simply a class with various utility functions and statements */
 public class PkgOfferUtils {
 
-    public static final String createPkgInputErr  = "No input should be consumed when create a package.";
-    public static final String createPkgOutputErr = "There should be one output state of type PkgOfferState.";
+    /* Utils for the RegisterPkg Command */
+
+    public static final String createPkgInputErr   = "No input should be consumed when create a package.";
+    public static final String createPkgOutputErr  = "There should be one output state of type PkgOfferState.";
 
     public static final String name                = "The <name>";
     public static final String description         = "The <description>";
@@ -36,17 +38,18 @@ public class PkgOfferUtils {
     public static final String unknownCommand      = "Unknown command.";
 
     /** Attributes used to construct transactions inside tests */
-    public static final String devX500Name         = "O=DevTest,L=Pisa,C=IT";
-    public static final String repositoryX500Name  = "O=RepositoryNode,L=Pisa,C=IT";
 
-    public static final String cordAppContractsPkg = "it.nextworks.corda.contracts";
+    public static final String devX500Name                = "O=DevTest,L=Pisa,C=IT";
+    public static final String repositoryX500Name         = "O=RepositoryNode,L=Pisa,C=IT";
+
+    public static final String cordAppContractsPkg        = "it.nextworks.corda.contracts";
 
     public static final UniqueIdentifier testId           = new UniqueIdentifier();
 
     public static final String testName                   = "testVNF";
     public static final String testDescription            = "test";
     public static final String testVersion                = "1.0";
-    public static final String testPkgInfoId              = "123";
+    public static final String testPkgInfoId              = "28a4fbc4-3cca-424f-b15a-0c6a5c4b49ab";
     public static final String testLink                   = "https://www.nextworks.it/";
     public static final PkgOfferState.PkgType testPkgType = PkgOfferState.PkgType.VNF;
 
@@ -63,4 +66,26 @@ public class PkgOfferUtils {
     public static final Quantity testQuantity             = new Quantity(1, "test");
     public static final TimePeriod testValidFor           = new TimePeriod("2020-10-23T16:42:23.0Z",
             "2020-10-24T00:00:00.0Z");
+
+    /* Utils for the UpdatePkg Command */
+
+    public static final String updatePkgInputErr       = "There should be only one input.";
+    public static final String updatePkgInputTypeErr   = "There should be only one input of type PkgOfferState.";
+    public static final String updatePkgOutputErr      = "There should be only one output.";
+    public static final String updatePkgOutputTypeErr  = "There should be only one output of type PkgOfferState.";
+
+    public static final String updateLinearIdErr       = "The <linearId> parameter must not change.";
+    public static final String updatePkgInfoIdErr      = "The <pkgInfoId> parameter must not change.";
+    public static final String updatePkgTypeErr        = "The <pkgType> parameter must not change.";
+
+    public static final String updateAuthorErr         = "Only the author can update a package and / or the <author> " +
+            "parameter cannot change.";
+    public static final String updateRepositoryNodeErr = "The <repositoryNode> parameter must not change.";
+
+    public static final String testNameUpdate        = "testVNFUpdate";
+    public static final String testDescriptionUpdate = "testUpdate";
+    public static final String testVersionUpdate     = "2.0";
+    public static final String testLinkUpdate        = "https://www.youtube.com/watch?v=ejYttnAXfEY&t";
+
+    public static final String toBeUpdated           = "toBeUpdated";
 }

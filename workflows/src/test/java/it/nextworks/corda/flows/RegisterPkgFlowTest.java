@@ -74,7 +74,7 @@ public class RegisterPkgFlowTest {
                 PkgOfferUtils.testValidFor);
         return new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
                 PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink,
-                PkgOfferUtils.testPkgType, poPrice);
+                PkgOfferUtils.testPkgType, poPrice, httpRequest);
     }
 
     @Test
