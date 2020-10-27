@@ -12,6 +12,4 @@ public class GetPkgsFlowUtils {
 
     public static final String cordAppContractsPkg    = "it.nextworks.corda.contracts";
     public static final String cordAppFlowsPkg        = "it.nextworks.corda.flows";
-
-    public static final String httpRequest            = "http://10.30.6.21:8083/";
 }

@@ -42,8 +42,6 @@ public class RegisterPkgFlowTest {
         devNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(devX500Name));
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
 
-        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
-
         mockNetwork.runNetwork();
     }
 
@@ -74,7 +72,7 @@ public class RegisterPkgFlowTest {
                 PkgOfferUtils.testValidFor);
         return new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName, PkgOfferUtils.testDescription,
                 PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLink,
-                PkgOfferUtils.testPkgType, poPrice, httpRequest);
+                PkgOfferUtils.testPkgType, poPrice);
     }
 
     @Test

@@ -39,8 +39,6 @@ public class EstablishFeeAgreementFlowTest {
         devNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(devX500Name));
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
 
-        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
-
         mockNetwork.runNetwork();
     }
 

@@ -1,6 +1,8 @@
 package it.nextworks.corda.webserver;
 
 public class ControllerUtils {
+    public static final String nullParam                  = "cannot accept null parameter.";
+
     public static final String statusRequestOK            = "Status retrieve request processed.";
     public static final String serverTimeRequestOK        = "Server Time retrieve request processed.";
     public static final String addressesRequestOK         = "Addresses retrieve request processed.";
@@ -19,6 +21,11 @@ public class ControllerUtils {
     public static final String errorWhileProcessingRq     = "Error while processing request.";
     public static final String getRequestSucceed          = "GET request to 5g-catalogue retrieve the requested package.";
     public static final String pkgRegistered              = "Registered package: ";
+
+    public static final String pkgUpdated                 = "Updated package: ";
+    public static final String pkgUpdateFailed            = "Package update failed : ";
+    public static final String notExistingPkg             = "The specified package to update does not exist.";
+    public static final String downBoardingRequired       = "You must down-board the package first.";
 
     public static final String marketplaceRequestOK       = "Marketplace retrieve request processed.";
     public static final String pkgsGetFailed              = "Packages retrieve Failed : ";

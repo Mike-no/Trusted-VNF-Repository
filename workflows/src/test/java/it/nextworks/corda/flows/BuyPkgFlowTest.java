@@ -53,7 +53,6 @@ public class BuyPkgFlowTest {
 
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
         buyerNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(buyerX500Name));
-        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -81,15 +80,15 @@ public class BuyPkgFlowTest {
      * be used in a PkgLicenseState transaction as component of a PkgLicenseState
      */
     private PkgOfferState generatePkgOfferState() throws Exception {
-        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
-                PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
-                PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
-                PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
+        ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink,
+                PkgOfferUtils.testDescription, PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate,
+                PkgOfferUtils.testLifecycleStatus, PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage,
+                PkgOfferUtils.testPriceType, PkgOfferUtils.testRecChargePeriodLength, PkgOfferUtils.testRecChargePeriodType,
                 PkgOfferUtils.testVersion, PkgOfferUtils.testPrice, PkgOfferUtils.testQuantity,
                 PkgOfferUtils.testValidFor);
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
                 PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
-                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice, httpRequest);
+                PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, poPrice);
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -113,7 +112,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -129,7 +128,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -145,7 +144,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -160,7 +159,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -179,7 +178,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -220,7 +219,7 @@ public class BuyPkgFlowTest {
         issueCash(pkgOfferState.getPrice());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();
@@ -257,13 +256,13 @@ public class BuyPkgFlowTest {
     }
 
     @Test
-    public void borrowerMustHaveCashInRightCurrency() throws Exception {
+    public void buyerMustHaveCashInRightCurrency() throws Exception {
         generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
         issueCash(Currencies.DOLLARS(1));
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         try {
@@ -275,12 +274,12 @@ public class BuyPkgFlowTest {
     }
 
     @Test
-    public void borrowerMustHaveEnoughCashInRightCurrency() throws Exception {
+    public void buyerMustHaveEnoughCashInRightCurrency() throws Exception {
         generateFeeAgreementState();
         PkgOfferState pkgOfferState = generatePkgOfferState();
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         try {
@@ -298,7 +297,7 @@ public class BuyPkgFlowTest {
 
         UniqueIdentifier pkgId = new UniqueIdentifier();
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice(), httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgId, pkgOfferState.getPrice());
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         try {
@@ -321,7 +320,7 @@ public class BuyPkgFlowTest {
         System.out.println(cashBalance.toString());
 
         BuyPkgFlow.PkgBuyerInitiation flow =
-                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), price, httpRequest);
+                new BuyPkgFlow.PkgBuyerInitiation(pkgOfferState.getLinearId(), price);
         CordaFuture<SignedTransaction> future = buyerNodeTest.startFlow(flow);
 
         mockNetwork.runNetwork();

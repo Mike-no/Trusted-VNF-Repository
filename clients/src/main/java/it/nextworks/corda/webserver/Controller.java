@@ -3,6 +3,7 @@ package it.nextworks.corda.webserver;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.flows.*;
 import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgLicenseState;
@@ -21,8 +22,6 @@ import net.corda.core.node.services.vault.PageSpecification;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.finance.contracts.asset.Cash;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +47,7 @@ import static net.corda.finance.workflows.GetBalances.getCashBalances;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/") /* The paths for HTTP requests are relative to this base path. */
 public class Controller {
@@ -65,7 +65,7 @@ public class Controller {
         me = proxy.nodeInfo().getLegalIdentities().get(0).getName();
     }
 
-    public static class RegisterPkgWrapper {
+    private static class RegisterPkgWrapper {
 
         @JsonProperty("name") private final String name;
         @JsonProperty("description") private final String description;
@@ -109,28 +109,78 @@ public class Controller {
         public ProductOfferingPrice getPoPrice() { return poPrice; }
     }
 
+    private static class UpdatePkgWrapper {
+
+        @JsonProperty("linearId") private final UniqueIdentifier linearId;
+        @JsonProperty("name") private final String name;
+        @JsonProperty("description") private final String description;
+        @JsonProperty("version") private final String version;
+        @JsonProperty("pkgInfoId") private final String pkgInfoId;
+        @JsonProperty("imageLink") private final String imageLink;
+        @JsonProperty("poPrice") private final ProductOfferingPrice poPrice;
+
+        @JsonCreator
+        public UpdatePkgWrapper(@JsonProperty("linearId") UniqueIdentifier linearId,
+                                @JsonProperty("name")String name,
+                                @JsonProperty("description")String description,
+                                @JsonProperty("version")String version,
+                                @JsonProperty("pkgInfoId")String pkgInfoId,
+                                @JsonProperty("imageLink")String imageLink,
+                                @JsonProperty("poPrice")ProductOfferingPrice poPrice) {
+            this.linearId    = linearId;
+            this.name        = name;
+            this.description = description;
+            this.version     = version;
+            this.pkgInfoId   = pkgInfoId;
+            this.imageLink   = imageLink;
+            this.poPrice     = poPrice;
+        }
+
+        public UniqueIdentifier getLinearId() { return linearId; }
+
+        public String getName() { return name; }
+
+        public String getDescription() { return description; }
+
+        public String getVersion() { return version; }
+
+        public String getPkgInfoId() { return pkgInfoId; }
+
+        public String getImageLink() { return imageLink; }
+
+        public ProductOfferingPrice getPoPrice() { return poPrice; }
+    }
+
     private static class BuyPkgWrapper {
 
         @JsonProperty("linearId") private final UniqueIdentifier linearId;
+        @JsonProperty("pkgInfoId") private final String pkgInfoId;
+        @JsonProperty("pkgType") private final PkgOfferState.PkgType pkgType;
         @JsonProperty("price") private final Money price;
 
         @JsonCreator
         public BuyPkgWrapper(@JsonProperty("linearId") UniqueIdentifier linearId,
+                             @JsonProperty("pkgInfoId")String pkgInfoId,
+                             @JsonProperty("pkgType")PkgOfferState.PkgType pkgType,
                              @JsonProperty("price") Money price) {
-            this.linearId = linearId;
-            this.price = price;
+            this.linearId  = linearId;
+            this.pkgInfoId = pkgInfoId;
+            this.pkgType   = pkgType;
+            this.price     = price;
         }
 
         /* Getters */
 
         public UniqueIdentifier getLinearId() { return linearId; }
 
+        public String getPkgInfoId() { return pkgInfoId; }
+
+        public PkgOfferState.PkgType getPkgType() { return pkgType; }
+
         public Money getPrice() { return price; }
     }
 
     /* Helpers for filtering the network map cache */
-
-    public String toDisplayString(X500Name name) { return BCStyle.INSTANCE.toString(name); }
 
     private boolean isNotary(NodeInfo nodeInfo) {
         return !proxy.notaryIdentities().stream().filter(el -> nodeInfo.isLegalIdentity(el))
@@ -238,6 +288,7 @@ public class Controller {
             proxy.startTrackedFlowDynamic(EstablishFeeAgreementFlow.DevInitiation.class, maxAcceptableFee)
                     .getReturnValue().get();
             logger.info(feeAgreementEstablished);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(feeAgreementEstablished);
         } catch(IllegalArgumentException iae) {
             logger.error(feeAgreementFailed + iae.getMessage());
@@ -248,13 +299,12 @@ public class Controller {
         }
     }
 
-    @PostMapping(value = "register-pkg", produces = TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> registerPkg(@RequestBody RegisterPkgWrapper wrapper) {
-        String pkgInfoId = wrapper.getPkgInfoId();
-        PkgOfferState.PkgType pkgType = wrapper.getPkgType();
-        if(pkgInfoId == null || pkgType == null)
+    private ResponseEntity<String> isOnBoarded(String pkgInfoId, PkgOfferState.PkgType pkgType) {
+        if(pkgInfoId == null || pkgType == null) {
+            logger.error(pkgRegisterFailed + nullParam);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(pkgRegisterFailed + "cannot accept null parameter.");
+                    .body(pkgRegisterFailed + nullParam);
+        }
 
         String request;
         if(pkgType.equals(PkgOfferState.PkgType.VNF))
@@ -268,26 +318,37 @@ public class Controller {
         try {
             URL url = new URL(request);
             HttpURLConnection con = (HttpURLConnection)url.openConnection();
+            con.setRequestProperty("Accept", "application/json");
             con.setRequestMethod("GET");
             int responseCode = con.getResponseCode();
 
             if(responseCode != HttpURLConnection.HTTP_OK) {
                 if(responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                    logger.error(pkgRegisterFailed + "on-boarding required.");
+                    logger.error(pkgRegisterFailed + onBoardingRequired);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(onBoardingRequired);
                 }
-                if(responseCode == HttpURLConnection.HTTP_BAD_REQUEST ||
-                        responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+                else {
                     logger.error(pkgRegisterFailed + errorWhileProcessingRq);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorWhileProcessingRq);
                 }
             }
 
             logger.info(getRequestSucceed);
+            return null;
         } catch(IOException ie) {
             logger.error(pkgRegisterFailed + errorWhileProcessingRq);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorWhileProcessingRq);
         }
+    }
+
+    @PutMapping(value = "register-pkg", produces = TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> registerPkg(@RequestBody RegisterPkgWrapper wrapper) {
+        String pkgInfoId = wrapper.getPkgInfoId();
+        PkgOfferState.PkgType pkgType = wrapper.getPkgType();
+
+        ResponseEntity<String> res = isOnBoarded(pkgInfoId, pkgType);
+        if(res != null)
+            return res;
 
         try {
             SignedTransaction result = proxy.startTrackedFlowDynamic(RegisterPkgFlow.DevInitiation.class,
@@ -295,10 +356,62 @@ public class Controller {
                     wrapper.getImageLink(), pkgType, wrapper.getPoPrice()).getReturnValue().get();
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
             logger.info(pkgRegistered + pkgOfferState.getLinearId());
+
             return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
                     " committed to ledger.\n" + pkgOfferState);
         } catch(Exception e) {
             logger.error(pkgRegisterFailed + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PutMapping(value = "update-pkg", produces = TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> updatePkg(@RequestBody UpdatePkgWrapper wrapper) {
+        UniqueIdentifier linearId = wrapper.getLinearId();
+        if(linearId == null) {
+            logger.error(pkgUpdateFailed + nullParam);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(pkgUpdateFailed + nullParam);
+        }
+
+        QueryCriteria.LinearStateQueryCriteria queryCriteria =
+                new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(linearId.getId()),
+                        null, Vault.StateStatus.UNCONSUMED);
+        List<StateAndRef<PkgOfferState>> lst = proxy.vaultQueryByCriteria(queryCriteria, PkgOfferState.class).getStates();
+        if(lst.size() == 0) {
+            logger.error(pkgUpdateFailed + notExistingPkg);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(notExistingPkg);
+        }
+
+        PkgOfferState oldPkgOfferState = lst.get(0).getState().getData();
+        PkgOfferState.PkgType pkgType = oldPkgOfferState.getPkgType();
+        ResponseEntity<String> resOld = isOnBoarded(oldPkgOfferState.getPkgInfoId(), pkgType);
+        if(resOld == null) {
+            logger.error(pkgUpdateFailed + downBoardingRequired);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(downBoardingRequired);
+        }
+        else if(!(resOld.getBody().equals(onBoardingRequired))) {
+            logger.error(pkgUpdateFailed + resOld.getBody());
+            return resOld;
+        }
+
+        String pkgInfoId = wrapper.getPkgInfoId();
+        ResponseEntity<String> resNew = isOnBoarded(pkgInfoId, pkgType);
+        if(resNew != null)
+            return resNew;
+
+        try {
+            SignedTransaction result = proxy.startTrackedFlowDynamic(UpdatePkgFlow.DevInitiation.class,
+                    linearId, wrapper.getName(), wrapper.getDescription(), wrapper.getVersion(),
+                    pkgInfoId, wrapper.getImageLink(), wrapper.getPoPrice())
+                    .getReturnValue().get();
+            PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
+            logger.info(pkgUpdated + pkgOfferState.getLinearId());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
+                    " committed to ledger.\n" + pkgOfferState);
+        } catch(Exception e) {
+            logger.error(pkgUpdateFailed + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -309,6 +422,7 @@ public class Controller {
             List<PkgOfferState> result = proxy.startTrackedFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
                     .getReturnValue().get();
             logger.info(marketplaceRequestOK);
+
             return ResponseEntity.status(HttpStatus.OK).body(result);
         } catch(Exception e) {
             logger.error(pkgsGetFailed + e.getMessage());
@@ -323,6 +437,7 @@ public class Controller {
             Cash.State cashState = proxy.startTrackedFlowDynamic(SelfIssueCashFlow.class,
                     new Amount<>((long) amount * 100, Currency.getInstance(currency))).getReturnValue().get();
             logger.info(cashIssued);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(cashState.toString());
         } catch(Exception e) {
             logger.error(cashIssueFailed + e.getMessage());
@@ -332,13 +447,24 @@ public class Controller {
 
     @PostMapping(value = "marketplace/buy-pkg", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<String> buyPkg(@RequestBody BuyPkgWrapper wrapper) {
+        ResponseEntity<String> res = isOnBoarded(wrapper.getPkgInfoId(), wrapper.getPkgType());
+        if(res != null)
+            return res;
+
         try {
             Money money = wrapper.getPrice();
+            if(money == null) {
+                logger.error(pkgPurchaseFailed + nullParam);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(pkgPurchaseFailed + nullParam);
+            }
+
             Amount<Currency> price = Amount.fromDecimal(BigDecimal.valueOf(money.getValue()).setScale(2,
                     BigDecimal.ROUND_HALF_EVEN), Currency.getInstance(money.getUnit()));
             SignedTransaction result = proxy.startTrackedFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class,
-                    wrapper.getLinearId(), price, catalogueURL).getReturnValue().get();
+                    wrapper.getLinearId(), price).getReturnValue().get();
             logger.info(pkgPurchased);
+
             return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
                     " committed to ledger.\n" + result.getTx().outputsOfType(PkgLicenseState.class).get(0));
         } catch(IllegalArgumentException iae) {
@@ -378,7 +504,7 @@ public class Controller {
             Vault.Page<PkgOfferState> results =
                     proxy.vaultQueryByWithPagingSpec(PkgOfferState.class,
                             new QueryCriteria.VaultQueryCriteria()
-                                    .withStatus(Vault.StateStatus.ALL), pageSpecification);
+                                    .withStatus(Vault.StateStatus.UNCONSUMED), pageSpecification);
             totalResults = results.getTotalStatesAvailable();
             states.addAll(results.getStates());
             pageNumber++;

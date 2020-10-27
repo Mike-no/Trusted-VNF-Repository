@@ -60,6 +60,12 @@ public class IssueCashToDevFlow {
          * @param developer Party to send money to
          */
         public IssueCashToDevInitiator(PkgLicenseState pkgLicenseState, Party developer){
+            if(pkgLicenseState == null)
+                throw new IllegalArgumentException(nullPkgLicenseState);
+
+            if(developer == null)
+                throw new IllegalArgumentException(nullDeveloper);
+
             this.pkgLicenseState = pkgLicenseState;
             this.developer = developer;
         }
