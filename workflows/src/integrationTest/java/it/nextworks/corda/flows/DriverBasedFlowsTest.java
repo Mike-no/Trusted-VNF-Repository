@@ -28,6 +28,7 @@ import rx.Observable;
 
 import java.util.Currency;
 import java.util.List;
+import java.util.Objects;
 
 import static it.nextworks.corda.flows.DriverBasedFlowsTestUtils.*;
 import static net.corda.testing.core.ExpectKt.expect;
@@ -78,18 +79,20 @@ public class DriverBasedFlowsTest {
                  * Assert that the buyer node and the developer
                  * node can communicate (see each other in the network)
                  */
-                assertEquals(repositoryHandle.getRpc().wellKnownPartyFromX500Name(devNodeTest.getName()).getName(),
-                        devNodeTest.getName());
-                assertEquals(devHandle.getRpc().wellKnownPartyFromX500Name(repositoryNodeTest.getName()).getName(),
+                assertEquals(Objects.requireNonNull(repositoryHandle.getRpc()
+                        .wellKnownPartyFromX500Name(devNodeTest.getName())).getName(), devNodeTest.getName());
+                assertEquals(Objects.requireNonNull(devHandle.getRpc()
+                        .wellKnownPartyFromX500Name(repositoryNodeTest.getName())).getName(),
                         repositoryNodeTest.getName());
-                assertEquals(repositoryHandle.getRpc().wellKnownPartyFromX500Name(buyerNodeTest.getName()).getName(),
-                        buyerNodeTest.getName());
-                assertEquals(buyerHandle.getRpc().wellKnownPartyFromX500Name(repositoryNodeTest.getName()).getName(),
+                assertEquals(Objects.requireNonNull(repositoryHandle.getRpc()
+                        .wellKnownPartyFromX500Name(buyerNodeTest.getName())).getName(), buyerNodeTest.getName());
+                assertEquals(Objects.requireNonNull(buyerHandle.getRpc()
+                        .wellKnownPartyFromX500Name(repositoryNodeTest.getName())).getName(),
                         repositoryNodeTest.getName());
-                assertEquals(devHandle.getRpc().wellKnownPartyFromX500Name(buyerNodeTest.getName()).getName(),
-                        buyerNodeTest.getName());
-                assertEquals(buyerHandle.getRpc().wellKnownPartyFromX500Name(devNodeTest.getName()).getName(),
-                        devNodeTest.getName());
+                assertEquals(Objects.requireNonNull(devHandle.getRpc()
+                        .wellKnownPartyFromX500Name(buyerNodeTest.getName())).getName(), buyerNodeTest.getName());
+                assertEquals(Objects.requireNonNull(buyerHandle.getRpc()
+                        .wellKnownPartyFromX500Name(devNodeTest.getName())).getName(), devNodeTest.getName());
 
                 /*
                  * Register the observer objects to track the dev's vault and the repository's vault (FeeAgreementState)
@@ -109,10 +112,11 @@ public class DriverBasedFlowsTest {
                 Observable<Vault.Update<PkgLicenseState>> repositoryLicenseVaultUpdates =
                         repositoryHandle.getRpc().vaultTrack(PkgLicenseState.class).getUpdates();
 
-                /* Start the fee agreement flow and verify that the fee state has been stored in the vault of each node */
+                /* Start the fee agreement flow and verify that the fee state has been stored in the vault of nodes */
                 devHandle.getRpc().startFlowDynamic(EstablishFeeAgreementFlow.DevInitiation.class, 15)
                         .getReturnValue().get();
 
+                @SuppressWarnings("unchecked")
                 Class<Vault.Update<FeeAgreementState>> feeVaultUpdateClass =
                         (Class<Vault.Update<FeeAgreementState>>)(Class<?>)Vault.Update.class;
 
@@ -139,15 +143,19 @@ public class DriverBasedFlowsTest {
                 UniqueIdentifier pkgId = pkgOfferState.getLinearId();
                 Amount<Currency> price = pkgOfferState.getPrice();
 
+                @SuppressWarnings("unchecked")
                 Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass =
                         (Class<Vault.Update<PkgOfferState>>)(Class<?>)Vault.Update.class;
 
-                checkVaultsAfterCreatePkg(devVaultUpdates, pkgVaultUpdateClass, pkgId, poPrice, devHandle, repositoryHandle);
-                checkVaultsAfterCreatePkg(repositoryPkgVaultUpdates, pkgVaultUpdateClass, pkgId, poPrice, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(devVaultUpdates, pkgVaultUpdateClass, pkgId,
+                        poPrice, devHandle, repositoryHandle);
+                checkVaultsAfterCreatePkg(repositoryPkgVaultUpdates, pkgVaultUpdateClass, pkgId,
+                        poPrice, devHandle, repositoryHandle);
 
                 /* Start the get pkgs flow to get the pkgId of a the pkg as will be shown in the marketplace */
                 List<PkgOfferState> pkgOfferStateList =
-                        buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class).getReturnValue().get();
+                        buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
+                                .getReturnValue().get();
                 assert (pkgOfferStateList.size() == 1);
                 PkgOfferState retrievedPkgOfferState = pkgOfferStateList.get(0);
                 UniqueIdentifier retrievedPkgId = retrievedPkgOfferState.getLinearId();
@@ -158,6 +166,7 @@ public class DriverBasedFlowsTest {
                 buyerHandle.getRpc().startFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class, retrievedPkgId,
                         price).getReturnValue().get();
 
+                @SuppressWarnings("unchecked")
                 Class<Vault.Update<PkgLicenseState>> pkgLicenseUpdateClass =
                         (Class<Vault.Update<PkgLicenseState>>)(Class<?>)Vault.Update.class;
 
@@ -165,6 +174,24 @@ public class DriverBasedFlowsTest {
                         buyerHandle, repositoryHandle);
                 checkVaultsAfterBuyPkg(repositoryLicenseVaultUpdates, pkgLicenseUpdateClass, pkgId, poPrice, devHandle,
                         buyerHandle, repositoryHandle);
+
+                /* Register the observer objects to track the dev's vault and the repository's vault (UpdatePkg) */
+                Observable<Vault.Update<PkgOfferState>> devVaultUpdatesAfterUpdate =
+                        devHandle.getRpc().vaultTrack(PkgOfferState.class).getUpdates();
+                Observable<Vault.Update<PkgOfferState>> repositoryPkgVaultUpdatesAfterUpdate =
+                        repositoryHandle.getRpc().vaultTrack(PkgOfferState.class).getUpdates();
+
+                /*
+                Start the update pkg flow and verify that the updated pkg state has been stored in
+                the vault of each node
+                */
+                devHandle.getRpc().startFlowDynamic(UpdatePkgFlow.DevInitiation.class,
+                        pkgId, PkgOfferUtils.testNameUpdate, PkgOfferUtils.testDescriptionUpdate,
+                        PkgOfferUtils.testVersionUpdate, PkgOfferUtils.testPkgInfoId,
+                        PkgOfferUtils.testLinkUpdate, poPrice).getReturnValue().get();
+
+                checkVaultsAfterPkgUpdate(devVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
+                checkVaultsAfterPkgUpdate(repositoryPkgVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
             } catch(Exception e) {
                 throw new RuntimeException(integrationTestEx, e);
             }
@@ -242,5 +269,31 @@ public class DriverBasedFlowsTest {
         assertEquals(recordedState.getPkgType(), PkgOfferUtils.testPkgType);
         assertEquals(recordedState.getAuthor(), author);
         assertEquals(recordedState.getRepositoryNode(), repositoryNode);
+    }
+
+    private void checkVaultsAfterPkgUpdate(@NotNull Observable<Vault.Update<PkgOfferState>> observer,
+                                           @NotNull Class<Vault.Update<PkgOfferState>> pkgVaultUpdateClass,
+                                           @NotNull PkgOfferState oldPkgOfferState) {
+        expectEvents(observer, true, () ->
+                expect(pkgVaultUpdateClass, update -> true, update -> {
+                    PkgOfferState newPkgOfferState = update.getProduced().iterator().next().getState().getData();
+                    checkUpdatedPkgStateCorrectness(oldPkgOfferState, newPkgOfferState);
+
+                    return null;
+                })
+        );
+    }
+
+    private void checkUpdatedPkgStateCorrectness(PkgOfferState oldPkgOfferState, PkgOfferState newPkgOfferState) {
+        assertEquals(oldPkgOfferState.getLinearId(), newPkgOfferState.getLinearId());
+        assertEquals(newPkgOfferState.getName(), PkgOfferUtils.testNameUpdate);
+        assertEquals(newPkgOfferState.getDescription(), PkgOfferUtils.testDescriptionUpdate);
+        assertEquals(newPkgOfferState.getVersion(), PkgOfferUtils.testVersionUpdate);
+        assertEquals(newPkgOfferState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(newPkgOfferState.getImageLink(), PkgOfferUtils.testLinkUpdate);
+        assertEquals(oldPkgOfferState.getPoPrice(), newPkgOfferState.getPoPrice());
+        assertEquals(oldPkgOfferState.getPkgType(), newPkgOfferState.getPkgType());
+        assertEquals(oldPkgOfferState.getAuthor(), newPkgOfferState.getAuthor());
+        assertEquals(oldPkgOfferState.getRepositoryNode(), newPkgOfferState.getRepositoryNode());
     }
 }

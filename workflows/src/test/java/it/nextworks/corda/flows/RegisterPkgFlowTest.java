@@ -123,7 +123,6 @@ public class RegisterPkgFlowTest {
 
         SignedTransaction signedTx = future.get();
         PkgOfferState pkgOfferState = ((PkgOfferState) signedTx.getTx().getOutput(0));
-        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             SignedTransaction recordedTx = node.getServices().getValidatedTransactions()
                     .getTransaction(signedTx.getId());
@@ -134,7 +133,7 @@ public class RegisterPkgFlowTest {
             assert (contractState instanceof PkgOfferState);
 
             PkgOfferState recordedState = (PkgOfferState) contractState;
-            checkPkgOfferStateCorrectness(recordedState, pkgId, pkgOfferState.getPoPrice());
+            checkPkgOfferStateCorrectness(recordedState, pkgOfferState.getLinearId(), pkgOfferState.getPoPrice());
         }
     }
 
@@ -148,7 +147,6 @@ public class RegisterPkgFlowTest {
 
         SignedTransaction signedTx = future.get();
         PkgOfferState pkgOfferState = ((PkgOfferState) signedTx.getTx().getOutput(0));
-        UniqueIdentifier pkgId = pkgOfferState.getLinearId();
         for(StartedMockNode node : ImmutableList.of(devNodeTest, repositoryNodeTest)) {
             node.transaction(() -> {
                 List<StateAndRef<PkgOfferState>> pkgs = node.getServices().getVaultService()
@@ -156,7 +154,7 @@ public class RegisterPkgFlowTest {
                 assertEquals(pkgs.size(), 1);
 
                 PkgOfferState recordedState = pkgs.get(0).getState().getData();
-                checkPkgOfferStateCorrectness(recordedState, pkgId, pkgOfferState.getPoPrice());
+                checkPkgOfferStateCorrectness(recordedState, pkgOfferState.getLinearId(), pkgOfferState.getPoPrice());
 
                 return null;
             });
