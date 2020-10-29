@@ -33,8 +33,11 @@ public class ControllerUtils {
     public static final String cashIssued                 = "Required cash amount issued.";
     public static final String cashIssueFailed            = "Cash issue Failed : ";
 
-    public static final String pkgPurchased               = "Package purchase successful";
+    public static final String pkgPurchased               = "Package purchased successfully.";
     public static final String pkgPurchaseFailed          = "Package purchase Failed : ";
+
+    public static final String pkgDeleted                 = "Package deleted successfully.";
+    public static final String pkgDeleteFailed            = "Package delete Failed : ";
 
     public static final String cashBalancesRequestOK      = "Cash Balances retrieve request processed.";
     public static final String feeAgreementStateRequestOK = "Fee Agreement State retrieve request processed.";

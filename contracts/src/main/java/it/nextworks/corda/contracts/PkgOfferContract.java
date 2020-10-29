@@ -109,8 +109,23 @@ public class PkgOfferContract implements Contract {
             });
         }
         else if(commandData instanceof Commands.DeletePkg) {
-            // TODO
-            System.out.println("Not Implemented.");
+            requireThat(require -> {
+                final List<ContractState> inputs = tx.getInputStates();
+                require.using(deletePkgInputErr, inputs.size() == 1);
+                require.using(deletePkgInputTypeErr, inputs.get(0) instanceof PkgOfferState);
+                final PkgOfferState inputPkgOfferState = tx.inputsOfType(PkgOfferState.class).get(0);
+
+                require.using(deletePkgOutputErr, tx.getOutputs().isEmpty());
+
+                final List<PublicKey> requiredSigners = command.getSigners();
+                require.using(twoSignersErr, requiredSigners.size() == 2);
+
+                final List<PublicKey> expectedSigners = Arrays.asList(inputPkgOfferState.getAuthor().getOwningKey(),
+                        inputPkgOfferState.getRepositoryNode().getOwningKey());
+                require.using(mustBeSignersErr, requiredSigners.containsAll(expectedSigners));
+
+                return null;
+            });
         }
         else
             throw new IllegalArgumentException(unknownCommand);

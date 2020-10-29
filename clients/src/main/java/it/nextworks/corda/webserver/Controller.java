@@ -476,6 +476,21 @@ public class Controller {
         }
     }
 
+    @PutMapping(value = "delete-pkg", produces = TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> deletePkg(@RequestBody UniqueIdentifier linearId) {
+        try {
+            SignedTransaction result = proxy.startTrackedFlowDynamic(DeletePkgFlow.DevInitiation.class,
+                    linearId).getReturnValue().get();
+            logger.info(pkgDeleted);
+
+            return ResponseEntity.status(HttpStatus.OK).body("Transaction id " + result.getId() +
+                    " committed to ledger.\n" + pkgDeleted);
+        } catch(Exception e) {
+            logger.error(pkgDeleteFailed + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     /* ####### Vault Queries ####### */
 
     @GetMapping(value = "cash-balances", produces = APPLICATION_JSON_VALUE)

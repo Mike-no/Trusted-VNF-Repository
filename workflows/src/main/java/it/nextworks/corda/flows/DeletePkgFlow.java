@@ -4,9 +4,7 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferContract;
 import it.nextworks.corda.states.PkgOfferState;
-import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
 import net.corda.core.contracts.Command;
-import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.crypto.SecureHash;
@@ -23,9 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static it.nextworks.corda.flows.UpdatePkgFlowUtils.*;
+import static it.nextworks.corda.flows.DeletePkgFlowUtils.*;
 
-public class UpdatePkgFlow {
+public class DeletePkgFlow {
 
     /**
      * This exception will be thrown if the UniqueIdentifier specified
@@ -43,24 +41,18 @@ public class UpdatePkgFlow {
 
         private final UniqueIdentifier linearId;
 
-        private final String name;
-        private final String description;
-        private final String version;
-        private final String pkgInfoId;
-        private final String imageLink;
-        private final ProductOfferingPrice poPrice;
-
-        private final Step RETRIEVING_PKG_FROM_LID = new Step(UpdatePkgFlowUtils.RETRIEVING_PKG_FROM_LID);
-        private final Step GENERATING_TRANSACTION  = new Step(UpdatePkgFlowUtils.GENERATING_TRANSACTION);
-        private final Step VERIFYING_TRANSACTION   = new Step(UpdatePkgFlowUtils.VERIFYING_TRANSACTION);
-        private final Step SIGNING_TRANSACTION     = new Step(UpdatePkgFlowUtils.SIGNING_TRANSACTION);
-        private final Step GATHERING_SIGNS         = new Step(UpdatePkgFlowUtils.GATHERING_SIGNS) {
+        private final Step RETRIEVING_PKG_FROM_LID = new Step(DeletePkgFlowUtils.RETRIEVING_PKG_FROM_LID);
+        private final Step SENDING_PKG_ID          = new Step(DeletePkgFlowUtils.SENDING_PKG_ID);
+        private final Step GENERATING_TRANSACTION  = new Step(DeletePkgFlowUtils.GENERATING_TRANSACTION);
+        private final Step VERIFYING_TRANSACTION   = new Step(DeletePkgFlowUtils.VERIFYING_TRANSACTION);
+        private final Step SIGNING_TRANSACTION     = new Step(DeletePkgFlowUtils.SIGNING_TRANSACTION);
+        private final Step GATHERING_SIGNS         = new Step(DeletePkgFlowUtils.GATHERING_SIGNS) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return CollectSignaturesFlow.Companion.tracker();
             }
         };
-        private final Step FINALISING_TRANSACTION  = new Step(UpdatePkgFlowUtils.FINALISING_TRANSACTION) {
+        private final Step FINALISING_TRANSACTION = new Step(DeletePkgFlowUtils.FINALISING_TRANSACTION) {
             @Override
             public ProgressTracker childProgressTracker() {
                 return FinalityFlow.Companion.tracker();
@@ -74,6 +66,7 @@ public class UpdatePkgFlow {
          */
         private final ProgressTracker progressTracker = new ProgressTracker(
                 RETRIEVING_PKG_FROM_LID,
+                SENDING_PKG_ID,
                 GENERATING_TRANSACTION,
                 VERIFYING_TRANSACTION,
                 SIGNING_TRANSACTION,
@@ -82,33 +75,14 @@ public class UpdatePkgFlow {
         );
 
         /**
-         * Constructor of the Initiating flow class, the following parameters will be used to build the transaction
-         * @param linearId    Linear ID of the package that we want update
-         * @param name        updated name of the package to build in the transaction
-         * @param description updated description of the package to build in the transaction
-         * @param version     updated version of the package to build in the transaction
-         * @param pkgInfoId   updated pkg info id of the package to build in the transaction
-         * @param imageLink   updated customized marketplace cover art location of the package to build in the transaction
-         * @param poPrice     updated product offering price of the package to build in the transaction
+         * Constructor of the Initiating flow class
+         * @param linearId ID of the package to delete
          */
-        public DevInitiation(UniqueIdentifier linearId,
-                             String name,
-                             String description,
-                             String version,
-                             String pkgInfoId,
-                             String imageLink,
-                             ProductOfferingPrice poPrice) {
+        public DevInitiation(UniqueIdentifier linearId) {
             if(linearId == null)
                 throw new IllegalArgumentException(nullLinearId);
 
-            this.linearId    = linearId;
-
-            this.name        = name;
-            this.description = description;
-            this.version     = version;
-            this.pkgInfoId   = pkgInfoId;
-            this.imageLink   = imageLink;
-            this.poPrice     = poPrice;
+            this.linearId = linearId;
         }
 
         @Override
@@ -125,7 +99,7 @@ public class UpdatePkgFlow {
                     .getNetworkMapCache()
                     .getNotary(CordaX500Name.parse(notaryX500Name));
             /*
-             * Retrieving our identity and the Repository Node identity that will be used as <author>
+             * Retrieving our identity and the Repository Node identity that will be used as <buyer>
              * and <repositoryNode> parameters in the transaction
              */
             final Party author = getOurIdentity();
@@ -145,19 +119,20 @@ public class UpdatePkgFlow {
             if(lst.size() == 0)
                 throw new NonExistentPkgException(linearId);
 
-            final PkgOfferState oldPkgOfferState = lst.get(0).getState().getData();
+            /* Set the current step to SENDING_PKG_ID and proceed to send the package ID */
+            progressTracker.setCurrentStep(SENDING_PKG_ID);
+
+            FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
+            repositoryNodeSession.send(linearId);
 
             /* Set the current step to GENERATING_TRANSACTION and proceed to build the latter */
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
-            final PkgOfferState newPkgOfferState = new PkgOfferState(oldPkgOfferState.getLinearId(), name, description,
-                    version, pkgInfoId, imageLink, oldPkgOfferState.getPkgType(), poPrice, author, repositoryNode);
-            final Command<PkgOfferContract.Commands.UpdatePkg> txCommand = new Command<>(
-                    new PkgOfferContract.Commands.UpdatePkg(), ImmutableList.of(author.getOwningKey(),
+            final Command<PkgOfferContract.Commands.DeletePkg> txCommand = new Command<>(
+                    new PkgOfferContract.Commands.DeletePkg(), ImmutableList.of(author.getOwningKey(),
                     repositoryNode.getOwningKey()));
             final TransactionBuilder txBuilder = new TransactionBuilder(notary)
                     .addInputState(lst.get(0))
-                    .addOutputState(newPkgOfferState, PkgOfferContract.ID)
                     .addCommand(txCommand);
 
             /* Set the current step to VERIFYING_TRANSACTION and proceed to call the verify function */
@@ -173,7 +148,6 @@ public class UpdatePkgFlow {
             /* Set the current step to GATHERING_SIGNS and starts a gathering sub-flow */
             progressTracker.setCurrentStep(GATHERING_SIGNS);
 
-            FlowSession repositoryNodeSession = initiateFlow(repositoryNode);
             final SignedTransaction fullySignedTx = subFlow(new CollectSignaturesFlow(partSignedTx,
                     ImmutableList.of(repositoryNodeSession)));
 
@@ -191,7 +165,7 @@ public class UpdatePkgFlow {
 
         /**
          * Constructor of the flow initiated by the DevInitiation class
-         * @param devSession session with the developer that want to update his package
+         * @param devSession session with the developer that want to delete his package
          */
         public RepositoryNodeAcceptor(FlowSession devSession) { this.devSession = devSession; }
 
@@ -205,26 +179,26 @@ public class UpdatePkgFlow {
 
                 /**
                  * Override the checkTransaction function to define the behaviour of the
-                 * repositoryNode when accepts new package update
+                 * repositoryNode when accepts new package delete
                  */
                 @Override
-                protected void checkTransaction(@NotNull SignedTransaction stx) throws NonExistentPkgException {
-                    ContractState output = stx.getTx().getOutputs().get(0).getData();
-                    if(!(output instanceof PkgOfferState))
-                        throw new IllegalArgumentException(notPkgStateErr);
-                    PkgOfferState newPkgOfferState = (PkgOfferState)output;
-
-                    /* Query for unconsumed linear state for the linear ID specified in the updated state */
-                    UniqueIdentifier linearId = newPkgOfferState.getLinearId();
-                    QueryCriteria.LinearStateQueryCriteria queryCriteria =
-                            new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(linearId.getId()),
-                                    null, Vault.StateStatus.UNCONSUMED);
-                    final List<StateAndRef<PkgOfferState>> lst = getServiceHub().getVaultService()
-                            .queryBy(PkgOfferState.class, queryCriteria).getStates();
-                    if(lst.size() == 0)
-                        throw new NonExistentPkgException(linearId);
-                }
+                protected void checkTransaction(@NotNull SignedTransaction stx) { }
             }
+
+            devSession.receive(UniqueIdentifier.class).unwrap(data -> {
+                /* Query for unconsumed linear state for given linear ID */
+                QueryCriteria.LinearStateQueryCriteria queryCriteria =
+                        new QueryCriteria.LinearStateQueryCriteria(null, ImmutableList.of(data.getId()),
+                                null, Vault.StateStatus.UNCONSUMED);
+                final List<StateAndRef<PkgOfferState>> lst = getServiceHub().getVaultService()
+                        .queryBy(PkgOfferState.class, queryCriteria).getStates();
+                if(lst.size() == 0)
+                    throw new NonExistentPkgException(data);
+
+                System.out.println(data);
+
+                return data;
+            });
 
             /* Check and Sign the transaction, get the hash value of the obtained transaction */
             final SignTxFlow signTxFlow = new SignTxFlow(devSession, SignTransactionFlow.Companion.tracker());

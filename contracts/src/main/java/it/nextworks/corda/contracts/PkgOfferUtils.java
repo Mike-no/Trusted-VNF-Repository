@@ -75,7 +75,6 @@ public class PkgOfferUtils {
     public static final String updatePkgOutputTypeErr  = "There should be only one output of type PkgOfferState.";
 
     public static final String updateLinearIdErr       = "The <linearId> parameter must not change.";
-    public static final String updatePkgInfoIdErr      = "The <pkgInfoId> parameter must not change.";
     public static final String updatePkgTypeErr        = "The <pkgType> parameter must not change.";
 
     public static final String updateAuthorErr         = "Only the author can update a package and / or the <author> " +
@@ -88,4 +87,12 @@ public class PkgOfferUtils {
     public static final String testLinkUpdate        = "https://www.youtube.com/watch?v=ejYttnAXfEY&t";
 
     public static final String toBeUpdated           = "toBeUpdated";
+
+    /* Utils for the UpdatePkg Command */
+
+    public static final String deletePkgInputErr     = "There should be only one input.";
+    public static final String deletePkgInputTypeErr = "There should be only one input of type PkgOfferState.";
+    public static final String deletePkgOutputErr    = "There should not be output.";
+
+    public static final String toBeDeleted           = "toBeDeleted";
 }
