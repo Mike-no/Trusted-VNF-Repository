@@ -192,6 +192,18 @@ public class DriverBasedFlowsTest {
 
                 checkVaultsAfterPkgUpdate(devVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
                 checkVaultsAfterPkgUpdate(repositoryPkgVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
+
+                /*
+                Start the delete flow and verify that the pkg has been deleted from
+                the marketplace (signed as CONSUMED in the vault)
+                */
+                devHandle.getRpc().startTrackedFlowDynamic(DeletePkgFlow.DevInitiation.class, pkgId)
+                        .getReturnValue().get();
+
+                List<PkgOfferState> pkgOfferStateListAfterDelete =
+                        buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
+                                .getReturnValue().get();
+                assert (pkgOfferStateListAfterDelete.isEmpty());
             } catch(Exception e) {
                 throw new RuntimeException(integrationTestEx, e);
             }
