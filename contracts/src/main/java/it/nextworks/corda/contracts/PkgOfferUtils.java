@@ -75,6 +75,7 @@ public class PkgOfferUtils {
     public static final String updatePkgOutputTypeErr  = "There should be only one output of type PkgOfferState.";
 
     public static final String updateLinearIdErr       = "The <linearId> parameter must not change.";
+    public static final String updateInfoIdErr         = "The <pkgInfoId> parameter must not change.";
     public static final String updatePkgTypeErr        = "The <pkgType> parameter must not change.";
 
     public static final String updateAuthorErr         = "Only the author can update a package and / or the <author> " +

@@ -35,7 +35,7 @@ public class UpdatePkgContractTest {
 
     private void generateInputPkgOfferState(@NotNull TransactionDSL<?> tx) {
         PkgOfferState pkgOfferState = new PkgOfferState(testId, testName, testDescription, testVersion,
-                "testPkgInfoId", testLink, testPkgType, createProductOfferingPrice(),
+                testPkgInfoId, testLink, testPkgType, createProductOfferingPrice(),
                 devTest.getParty(), repositoryNodeTest.getParty());
         tx.output(PkgOfferContract.ID, toBeUpdated, pkgOfferState);
         tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -248,9 +248,9 @@ public class UpdatePkgContractTest {
         }));
     }
 
-    /** Test that the <pkgInfoId> parameter of the output state of a transaction must be well formatted */
+    /** Test that the <pkgInfoId> parameter of the output state of a transaction must not change */
     @Test
-    public void outputStateMustHaveWellFormattedPkgInfoId() {
+    public void outputStateMustHaveEqualsIPkgInfoId() {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 generateInputPkgOfferState(tx);
@@ -260,27 +260,13 @@ public class UpdatePkgContractTest {
             ledger.transaction(tx -> {
                 StateAndRef<PkgOfferState> inputPkg = ledger.retrieveOutputStateAndRef(PkgOfferState.class, toBeUpdated);
                 tx.input(inputPkg.getRef());
+                tx.output(PkgOfferContract.ID, new PkgOfferState(testId, testNameUpdate, testDescriptionUpdate,
+                        testVersionUpdate, "testPkgInfoId", testLinkUpdate, testPkgType,
+                        createProductOfferingPrice(), devTest.getParty(), repositoryNodeTest.getParty()));
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new PkgOfferContract.Commands.UpdatePkg());
 
-                tx.tweak(tw -> {
-                    tw.output(PkgOfferContract.ID, new PkgOfferState(testId, testNameUpdate, testDescriptionUpdate,
-                            testVersionUpdate, null, testLinkUpdate, testPkgType,
-                            createProductOfferingPrice(), devTest.getParty(), repositoryNodeTest.getParty()));
-                    return tw.failsWith(pkgInfoId + strErrMsg);
-                });
-
-                tx.tweak(tw -> {
-                    tw.output(PkgOfferContract.ID, new PkgOfferState(testId, testNameUpdate, testDescriptionUpdate,
-                            testVersionUpdate, "", testLinkUpdate, testPkgType,
-                            createProductOfferingPrice(), devTest.getParty(), repositoryNodeTest.getParty()));
-                    return tw.failsWith(pkgInfoId + strErrMsg);
-                });
-
-                tx.output(PkgOfferContract.ID, new PkgOfferState(testId, testNameUpdate, testDescriptionUpdate,
-                        testVersionUpdate, " ", testLinkUpdate, testPkgType,
-                        createProductOfferingPrice(), devTest.getParty(), repositoryNodeTest.getParty()));
-                return tx.failsWith(pkgInfoId + strErrMsg);
+                return tx.failsWith(updateInfoIdErr);
             });
             return null;
         }));

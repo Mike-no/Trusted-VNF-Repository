@@ -187,8 +187,7 @@ public class DriverBasedFlowsTest {
                 */
                 devHandle.getRpc().startFlowDynamic(UpdatePkgFlow.DevInitiation.class,
                         pkgId, PkgOfferUtils.testNameUpdate, PkgOfferUtils.testDescriptionUpdate,
-                        PkgOfferUtils.testVersionUpdate, PkgOfferUtils.testPkgInfoId,
-                        PkgOfferUtils.testLinkUpdate, poPrice).getReturnValue().get();
+                        PkgOfferUtils.testVersionUpdate, PkgOfferUtils.testLinkUpdate, poPrice).getReturnValue().get();
 
                 checkVaultsAfterPkgUpdate(devVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
                 checkVaultsAfterPkgUpdate(repositoryPkgVaultUpdatesAfterUpdate, pkgVaultUpdateClass, pkgOfferState);
@@ -301,7 +300,7 @@ public class DriverBasedFlowsTest {
         assertEquals(newPkgOfferState.getName(), PkgOfferUtils.testNameUpdate);
         assertEquals(newPkgOfferState.getDescription(), PkgOfferUtils.testDescriptionUpdate);
         assertEquals(newPkgOfferState.getVersion(), PkgOfferUtils.testVersionUpdate);
-        assertEquals(newPkgOfferState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(oldPkgOfferState.getPkgInfoId(), newPkgOfferState.getPkgInfoId());
         assertEquals(newPkgOfferState.getImageLink(), PkgOfferUtils.testLinkUpdate);
         assertEquals(oldPkgOfferState.getPoPrice(), newPkgOfferState.getPoPrice());
         assertEquals(oldPkgOfferState.getPkgType(), newPkgOfferState.getPkgType());

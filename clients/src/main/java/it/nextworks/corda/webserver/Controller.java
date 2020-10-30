@@ -115,7 +115,6 @@ public class Controller {
         @JsonProperty("name") private final String name;
         @JsonProperty("description") private final String description;
         @JsonProperty("version") private final String version;
-        @JsonProperty("pkgInfoId") private final String pkgInfoId;
         @JsonProperty("imageLink") private final String imageLink;
         @JsonProperty("poPrice") private final ProductOfferingPrice poPrice;
 
@@ -124,14 +123,12 @@ public class Controller {
                                 @JsonProperty("name")String name,
                                 @JsonProperty("description")String description,
                                 @JsonProperty("version")String version,
-                                @JsonProperty("pkgInfoId")String pkgInfoId,
                                 @JsonProperty("imageLink")String imageLink,
                                 @JsonProperty("poPrice")ProductOfferingPrice poPrice) {
             this.linearId    = linearId;
             this.name        = name;
             this.description = description;
             this.version     = version;
-            this.pkgInfoId   = pkgInfoId;
             this.imageLink   = imageLink;
             this.poPrice     = poPrice;
         }
@@ -143,8 +140,6 @@ public class Controller {
         public String getDescription() { return description; }
 
         public String getVersion() { return version; }
-
-        public String getPkgInfoId() { return pkgInfoId; }
 
         public String getImageLink() { return imageLink; }
 
@@ -382,27 +377,14 @@ public class Controller {
         }
 
         PkgOfferState oldPkgOfferState = lst.get(0).getState().getData();
-        PkgOfferState.PkgType pkgType = oldPkgOfferState.getPkgType();
-        ResponseEntity<String> resOld = isOnBoarded(oldPkgOfferState.getPkgInfoId(), pkgType);
-        if(resOld == null) {
-            logger.error(pkgUpdateFailed + downBoardingRequired);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(downBoardingRequired);
-        }
-        else if(!(resOld.getBody().equals(onBoardingRequired))) {
-            logger.error(pkgUpdateFailed + resOld.getBody());
-            return resOld;
-        }
-
-        String pkgInfoId = wrapper.getPkgInfoId();
-        ResponseEntity<String> resNew = isOnBoarded(pkgInfoId, pkgType);
-        if(resNew != null)
-            return resNew;
+        ResponseEntity<String> res = isOnBoarded(oldPkgOfferState.getPkgInfoId(), oldPkgOfferState.getPkgType());
+        if(res != null)
+            return res;
 
         try {
             SignedTransaction result = proxy.startTrackedFlowDynamic(UpdatePkgFlow.DevInitiation.class,
-                    linearId, wrapper.getName(), wrapper.getDescription(), wrapper.getVersion(),
-                    pkgInfoId, wrapper.getImageLink(), wrapper.getPoPrice())
-                    .getReturnValue().get();
+                    wrapper.getLinearId(), wrapper.getName(), wrapper.getDescription(), wrapper.getVersion(),
+                    wrapper.getImageLink(), wrapper.getPoPrice()).getReturnValue().get();
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
             logger.info(pkgUpdated + pkgOfferState.getLinearId());
 

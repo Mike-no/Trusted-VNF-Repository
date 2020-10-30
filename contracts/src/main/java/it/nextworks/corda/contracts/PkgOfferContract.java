@@ -84,7 +84,7 @@ public class PkgOfferContract implements Contract {
                 require.using(name + strErrMsg, isWellFormatted(outputPkgOfferState.getName()));
                 require.using(description + strErrMsg, isWellFormatted(outputPkgOfferState.getDescription()));
                 require.using(version + strErrMsg, isWellFormatted(outputPkgOfferState.getVersion()));
-                require.using(pkgInfoId + strErrMsg, isWellFormatted(outputPkgOfferState.getPkgInfoId()));
+                require.using(updateInfoIdErr, inputPkgOfferState.getPkgInfoId().equals(outputPkgOfferState.getPkgInfoId()));
                 try {
                     new URL(outputPkgOfferState.getImageLink());
                 } catch (MalformedURLException mue) {

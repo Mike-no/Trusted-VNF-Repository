@@ -77,7 +77,7 @@ public class UpdatePkgFlowTest {
      */
     private PkgOfferState generateOldPkgOfferState() throws Exception {
         RegisterPkgFlow.DevInitiation flow = new RegisterPkgFlow.DevInitiation(PkgOfferUtils.testName,
-                PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, "PkgOfferUtils-testPkgInfoId",
+                PkgOfferUtils.testDescription, PkgOfferUtils.testVersion, PkgOfferUtils.testPkgInfoId,
                 PkgOfferUtils.testLink, PkgOfferUtils.testPkgType, createProductOfferingPrice());
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
@@ -91,7 +91,7 @@ public class UpdatePkgFlowTest {
     private UpdatePkgFlow.DevInitiation createFlow(PkgOfferState oldPkgOfferState) {
         return new UpdatePkgFlow.DevInitiation(oldPkgOfferState.getLinearId(), PkgOfferUtils.testNameUpdate,
                 PkgOfferUtils.testDescriptionUpdate, PkgOfferUtils.testVersionUpdate,
-                PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLinkUpdate, createProductOfferingPrice());
+                PkgOfferUtils.testLinkUpdate, createProductOfferingPrice());
     }
 
     @Test
@@ -193,7 +193,7 @@ public class UpdatePkgFlowTest {
         assertEquals(newPkgOfferState.getName(), PkgOfferUtils.testNameUpdate);
         assertEquals(newPkgOfferState.getDescription(), PkgOfferUtils.testDescriptionUpdate);
         assertEquals(newPkgOfferState.getVersion(), PkgOfferUtils.testVersionUpdate);
-        assertEquals(newPkgOfferState.getPkgInfoId(), PkgOfferUtils.testPkgInfoId);
+        assertEquals(oldPkgOfferState.getPkgInfoId(), newPkgOfferState.getPkgInfoId());
         assertEquals(newPkgOfferState.getImageLink(), PkgOfferUtils.testLinkUpdate);
         assertEquals(oldPkgOfferState.getPoPrice(), newPkgOfferState.getPoPrice());
         assertEquals(oldPkgOfferState.getPkgType(), newPkgOfferState.getPkgType());
@@ -210,7 +210,7 @@ public class UpdatePkgFlowTest {
         UpdatePkgFlow.DevInitiation flow =
                 new UpdatePkgFlow.DevInitiation(pkgId, PkgOfferUtils.testNameUpdate,
                         PkgOfferUtils.testDescriptionUpdate, PkgOfferUtils.testVersionUpdate,
-                        PkgOfferUtils.testPkgInfoId, PkgOfferUtils.testLinkUpdate, createProductOfferingPrice());
+                        PkgOfferUtils.testLinkUpdate, createProductOfferingPrice());
         CordaFuture<SignedTransaction> future = devNodeTest.startFlow(flow);
 
         try {

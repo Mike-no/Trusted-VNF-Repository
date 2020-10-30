@@ -46,7 +46,6 @@ public class UpdatePkgFlow {
         private final String name;
         private final String description;
         private final String version;
-        private final String pkgInfoId;
         private final String imageLink;
         private final ProductOfferingPrice poPrice;
 
@@ -87,7 +86,6 @@ public class UpdatePkgFlow {
          * @param name        updated name of the package to build in the transaction
          * @param description updated description of the package to build in the transaction
          * @param version     updated version of the package to build in the transaction
-         * @param pkgInfoId   updated pkg info id of the package to build in the transaction
          * @param imageLink   updated customized marketplace cover art location of the package to build in the transaction
          * @param poPrice     updated product offering price of the package to build in the transaction
          */
@@ -95,7 +93,6 @@ public class UpdatePkgFlow {
                              String name,
                              String description,
                              String version,
-                             String pkgInfoId,
                              String imageLink,
                              ProductOfferingPrice poPrice) {
             if(linearId == null)
@@ -106,7 +103,6 @@ public class UpdatePkgFlow {
             this.name        = name;
             this.description = description;
             this.version     = version;
-            this.pkgInfoId   = pkgInfoId;
             this.imageLink   = imageLink;
             this.poPrice     = poPrice;
         }
@@ -151,7 +147,7 @@ public class UpdatePkgFlow {
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
             final PkgOfferState newPkgOfferState = new PkgOfferState(oldPkgOfferState.getLinearId(), name, description,
-                    version, pkgInfoId, imageLink, oldPkgOfferState.getPkgType(), poPrice, author, repositoryNode);
+                    version, oldPkgOfferState.getPkgInfoId(), imageLink, oldPkgOfferState.getPkgType(), poPrice, author, repositoryNode);
             final Command<PkgOfferContract.Commands.UpdatePkg> txCommand = new Command<>(
                     new PkgOfferContract.Commands.UpdatePkg(), ImmutableList.of(author.getOwningKey(),
                     repositoryNode.getOwningKey()));
