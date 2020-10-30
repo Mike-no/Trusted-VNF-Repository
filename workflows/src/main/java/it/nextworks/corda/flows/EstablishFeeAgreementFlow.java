@@ -44,7 +44,12 @@ public class EstablishFeeAgreementFlow {
          * Constructor of the Initiating flow class.
          * @param maxAcceptableFee max % fee accepted by the developer
          */
-        public DevInitiation(int maxAcceptableFee) { this.maxAcceptableFee = maxAcceptableFee; }
+        public DevInitiation(int maxAcceptableFee) {
+            if(maxAcceptableFee < 0 || maxAcceptableFee > 100)
+                throw new IllegalArgumentException(feeErr);
+
+            this.maxAcceptableFee = maxAcceptableFee;
+        }
 
         @Suspendable
         @Override

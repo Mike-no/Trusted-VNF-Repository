@@ -1,25 +1,233 @@
 <!DOCTYPE html>
 <html lang = "en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Trusted Package Marketplace</title>
+    <meta charset = "UTF-8">
+    <title>Trusted Package Repository - Marketplace</title>
+
     <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity = "sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+          integrity = "sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin = "anonymous">
     <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="css/index.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.1/angular.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.min.js"></script>
+          integrity = "sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin = "anonymous">
+    <link rel = "stylesheet" type = "text/css" href = "css/index.css">
+
+    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity = "sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin = "anonymous"></script>
+    <script src = "https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.1/angular.min.js"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.min.js"></script>
+    <script src = "js/main.js"></script>
+    <script src = "js/feeAgreementModal.js"></script>
+    <script src = "js/selfIssueCashModal.js"></script>
+    <script src = "js/pkgDetailsModal.js"></script>
+    <script src = "js/buyPkgModal.js"></script>
 </head>
-<body>
-<div>
-    <img src="https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png" alt="Corda" width="500">
-    <h1>CorDapp Template (Java Version)</h1>
-    <p>Learn more about how to build CorDapps atatatat <a href="http://www.github.com/corda/samples-java">sample-java</a></p>
+
+<body ng-app = "mainModule" ng-controller = "MainCtrl as MainCtrl">
+<nav class = "navbar navbar-default">
+    <div class = "container-fluid">
+        <div class = "navbar-header">
+            <a class = "navbar-brand" href = "#">{{MainCtrl.thisNode}}</a>
+        </div>
+        <!-- <button ng-click = "MainCtrl.openFeeAgreementModal()" type = "button" class = "btn btn-primary navbar-btn">
+            Fee Agreement
+        </button> -->
+        <button ng-click = "MainCtrl.openSelfIssueCashModal()" type = "button" class = "btn btn-primary navbar-btn">
+            Issue Cash
+        </button>
+        <button ng-click = "MainCtrl.refresh()" type = "button" class = "btn btn-default navbar-btn"><span
+                class="glyphicon glyphicon-refresh"></span></button>
+    </div>
+</nav>
+
+<script type = "text/ng-template" id = "feeAgreementModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Establish Fee Agreement</h4>
+    </div>
+    <form>
+        <div class = "modal-body">
+            <div class = "form-group">
+                <label for = "createMaxAcceptableFee" class = "control-label">Max Acceptable Fee (%):</label>
+                <input type = "text" ng-model = "feeAgreementModal.form.maxAcceptableFee" class = "form-control" id = "createMaxAcceptableFee">
+            </div>
+            <div ng-show = "feeAgreementModal.formError" class = "form-group">
+                <div class = "alert alert-danger" role = "alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only">Error:</span>
+                    Enter a valid fee parameter - fee : [0 - 100]
+                </div>
+            </div>
+        </div>
+        <div class = "modal-footer">
+            <button ng-click = "feeAgreementModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+            <button ng-click = "feeAgreementModal.create()" type = "button" class = "btn btn-primary">Establish</button>
+        </div>
+    </form>
+</script>
+
+<script type = "text/ng-template" id = "feeAgreementMsgModal.html">
+    <div class = "modal-body" id = "establish-fee-agreement-modal-body">
+        {{ feeAgreementMsgModal.message }}
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "selfIssueCashModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Self-Issue Cash</h4>
+    </div>
+    <form>
+        <div class = "modal-body">
+            <div class = "form-group">
+                <label for = "selfIssueCashCurrency" class = "control-label">Currency (ISO code):</label>
+                <input type = "text" ng-model = "selfIssueCashModal.form.currency" class = "form-control" id = "selfIssueCashCurrency">
+            </div>
+            <div class = "form-group">
+                <label for = "selfIssueCashAmount" class = "control-label">Amount (Int):</label>
+                <input type = "text" ng-model = "selfIssueCashModal.form.amount" class = "form-control" id = "selfIssueCashAmount">
+            </div>
+            <div ng-show = "selfIssueCashModal.formError" class = "form-group">
+                <div class = "alert alert-danger" role = "alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only">Error:</span>
+                    Enter valid cash issuance parameters.
+                </div>
+            </div>
+        </div>
+        <div class = "modal-footer">
+            <button ng-click = "selfIssueCashModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+            <button ng-click = "selfIssueCashModal.issue()" type = "button" class = "btn btn-primary">Issue Cash</button>
+        </div>
+    </form>
+</script>
+
+<script type = "text/ng-template" id = "selfIssueCashMsgModal.html">
+    <div class = "modal-body" id = "self-issue-cash-modal-body">
+        {{ selfIssueCashMsgModal.message }}
+    </div>
+</script>
+
+<div class = "row">
+    <div class = "col-md-1"></div>
+    <div class = "col-md-10">
+        <div class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">Cash Balances:</h3>
+            </div>
+            <div class = "panel-body">
+                <table class = "table">
+                    <thead>
+                    <tr>
+                        <th>Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat = "cash in MainCtrl.cashBalances">
+                        <td class = "vert-align">{{ cash }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class = "col-md-1"></div>
+    </div>
 </div>
+
+<script type = "text/ng-template" id = "pkgDetailsModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Package {{ pkgDetailsModal.pkg.linearId.id }}</h4>
+    </div>
+    <div class = "modal-body">
+        <strong>Name:</strong> {{ pkgDetailsModal.pkg.name }} <br>
+        <strong>Description:</strong> {{ pkgDetailsModal.pkg.description }} <br>
+        <strong>Version:</strong> {{ pkgDetailsModal.pkg.version }}<br>
+        <strong>Catalogue Info ID:</strong> {{ pkgDetailsModal.pkg.pkgInfoId }}<br>
+        <strong>Type:</strong> {{ pkgDetailsModal.pkg.pkgType }}<br>
+        <strong>Recurring Charge Period Length:</strong> {{ pkgDetailsModal.pkg.poPrice.recurringChargePeriodLength }}<br>
+        <strong>Recurring Charge Period Type:</strong> {{ pkgDetailsModal.pkg.poPrice.recurringChargePeriodType }}<br>
+        <strong>Price:</strong> {{ pkgDetailsModal.pkg.poPrice.price.unit }}
+        {{ pkgDetailsModal.pkg.poPrice.price.value }}<br>
+        <strong>Quantity:</strong> {{ pkgDetailsModal.pkg.poPrice.unitOfMeasure.amount }}
+        {{ pkgDetailsModal.pkg.poPrice.unitOfMeasure.unit }}<br>
+        <strong>Valid For:</strong> {{ pkgDetailsModal.pkg.poPrice.validFor.startDateTime }} /
+        {{ pkgDetailsModal.pkg.poPrice.validFor.endDateTime }}<br>
+        <strong>Author:</strong> {{ pkgDetailsModal.pkg.author }}
+    </div>
+    <div class = "modal-footer">
+        <button ng-click = "pkgDetailsModal.cancel()" type = "button" class="btn btn-default">Close</button>
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "buyPkgModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Buy Package {{ buyPkgModal.linearId.id }}</h4>
+    </div>
+    <div class = "modal-body">
+        Are you sure to buy this package?
+    </div>
+    <div class = "modal-footer">
+        <button ng-click = "buyPkgModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+        <button ng-click = "buyPkgModal.buyPkg()" type = "button" class = "btn btn-primary">Buy</button>
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "buyPkgMsgModal.html">
+    <div class = "modal-body" id = "buy-pkg-modal-body">
+        {{ buyPkgMsgModal.message }}
+    </div>
+</script>
+
+<div class = "row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <div ng-show = "!MainCtrl.pkgs.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">There are no packages for sale</h3>
+            </div>
+            <div class = "panel-body"></div>
+        </div>
+        <div ng-show = "MainCtrl.pkgs.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">Packages:</h3>
+            </div>
+            <div class = "panel-body">
+                <table class = "table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Version</th>
+                        <th>Package Type</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat = "pkg in MainCtrl.pkgs">
+                        <td class = "vert-align">{{ pkg.name }}</td>
+                        <td class = "vert-align">{{ pkg.description }}</td>
+                        <td class = "vert-align">{{ pkg.version }}</td>
+                        <td class = "vert-align">{{ pkg.pkgType }}</td>
+                        <td class = "vert-align">{{ pkg.poPrice.price.unit }} {{ pkg.poPrice.price.value }}</td>
+                        <td>
+                            <div class = "btn-group" role = "group">
+                                <button ng-click = "MainCtrl.openPkgDetailsModal(pkg)" type = "button"
+                                        class = "btn btn-primary">Details
+                                </button>
+                                <button ng-click = "MainCtrl.openBuyPkgModal(pkg.linearId, pkg.pkgInfoId, pkg.pkgType,
+                                        pkg.poPrice.price)" type = "button" class = "btn btn-primary">Buy
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class = "col-md-1"></div>
+    </div>
+</div>
+
 </body>
+
 </html>

@@ -290,12 +290,10 @@ public class Controller {
             logger.info(feeAgreementEstablished);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(feeAgreementEstablished);
-        } catch(IllegalArgumentException iae) {
-            logger.error(feeAgreementFailed + iae.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(iae.getMessage());
         } catch(Exception e) {
             logger.error(feeAgreementFailed + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage().substring(e.getMessage().lastIndexOf(':') + 1));
         }
     }
 
@@ -433,15 +431,23 @@ public class Controller {
     @PostMapping(value = "self-issue-cash", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<String> selfIssueCash(@RequestParam(value = "amount")int amount,
                                                 @RequestParam(value = "currency")String currency) {
+        if (amount <= 0) {
+            logger.error(cashIssueFailed + negativeAmount);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(negativeAmount);
+        }
         try {
             Cash.State cashState = proxy.startTrackedFlowDynamic(SelfIssueCashFlow.class,
                     new Amount<>((long) amount * 100, Currency.getInstance(currency))).getReturnValue().get();
             logger.info(cashIssued);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(cashState.toString());
+        } catch(IllegalArgumentException iae){
+            logger.error(cashIssueFailed + invalidISOCode);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(invalidISOCode);
         } catch(Exception e) {
             logger.error(cashIssueFailed + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage().substring(e.getMessage().lastIndexOf(':') + 1));
         }
     }
 
@@ -465,8 +471,7 @@ public class Controller {
                     wrapper.getLinearId(), price).getReturnValue().get();
             logger.info(pkgPurchased);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
-                    " committed to ledger.\n" + result.getTx().outputsOfType(PkgLicenseState.class).get(0));
+            return ResponseEntity.status(HttpStatus.CREATED).body(pkgPurchased);
         } catch(IllegalArgumentException iae) {
             logger.error(pkgPurchaseFailed + iae.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(iae.getMessage());

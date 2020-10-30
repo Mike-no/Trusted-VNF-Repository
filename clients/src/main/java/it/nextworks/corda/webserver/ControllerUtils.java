@@ -32,6 +32,8 @@ public class ControllerUtils {
 
     public static final String cashIssued                 = "Required cash amount issued.";
     public static final String cashIssueFailed            = "Cash issue Failed : ";
+    public static final String negativeAmount             = "The <amount> parameter cannot be negative.";
+    public static final String invalidISOCode             = "The <currency> parameter is not a valid ISO 4217 code.";
 
     public static final String pkgPurchased               = "Package purchased successfully.";
     public static final String pkgPurchaseFailed          = "Package purchase Failed : ";

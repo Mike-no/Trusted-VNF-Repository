@@ -32,13 +32,29 @@ springBoot {
     mainClassName = "it.nextworks.corda.webserver.Server"
 }
 
-/* This task will start the springboot server that connects to your node (via RPC connection). All of the http requests
- * are in the Controller file. You can leave the Server.kt and NodeRPCConnection.kt file untouched for your use.
+/* These task will start the spring boot server that connects to your node (via RPC connection). All of the http requests
+ * are in the Controller file.
  */
-task runTemplateServer(type: JavaExec, dependsOn: assemble) {
+task runDeveloperServer(type: JavaExec, dependsOn: assemble) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'it.nextworks.corda.webserver.WebServerStarter'
-    args '--server.port=10050', '--config.rpc.host=localhost', '--config.rpc.port=10006',
+    args '--server.port=10097', '--config.rpc.host=localhost', '--config.rpc.port=10006',
+            '--config.rpc.username=user1', '--config.rpc.password=test',
+            '--config.catalogue.host=http://10.30.6.21:8083/'
+}
+
+task runRepositoryServer(type: JavaExec, dependsOn: assemble) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'it.nextworks.corda.webserver.WebServerStarter'
+    args '--server.port=10098', '--config.rpc.host=localhost', '--config.rpc.port=10009',
+            '--config.rpc.username=user1', '--config.rpc.password=test',
+            '--config.catalogue.host=http://10.30.6.21:8083/'
+}
+
+task runBuyerServer(type: JavaExec, dependsOn: assemble) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'it.nextworks.corda.webserver.WebServerStarter'
+    args '--server.port=10099', '--config.rpc.host=localhost', '--config.rpc.port=10012',
             '--config.rpc.username=user1', '--config.rpc.password=test',
             '--config.catalogue.host=http://10.30.6.21:8083/'
 }

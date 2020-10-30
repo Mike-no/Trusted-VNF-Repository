@@ -1,8 +1,9 @@
 package it.nextworks.corda.flows;
 
 public class EstablishFeeAgreementFlowUtils {
+    public static final String feeErr                     = "The specified fee must be between 0 and 100 : [0-100]";
     public static final String notFeeAgreementErr         = "This must be a fee transaction.";
-    public static final String tooHighFee                 = "The submitted fee is too high for the developer.";
+    public static final String tooHighFee                 = "The fee requested by the Repository is 10%";
 
     public static final String AlreadyEstablishedFee      = "The developer has already established a fee agreement" +
             " with the Repository Node.";
