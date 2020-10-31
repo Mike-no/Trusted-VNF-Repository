@@ -350,8 +350,7 @@ public class Controller {
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
             logger.info(pkgRegistered + pkgOfferState.getLinearId());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
-                    " committed to ledger.\n" + pkgOfferState);
+            return ResponseEntity.status(HttpStatus.CREATED).body(pkgRegistered + pkgOfferState.getLinearId());
         } catch(Exception e) {
             logger.error(pkgRegisterFailed + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -388,8 +387,7 @@ public class Controller {
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
             logger.info(pkgUpdated + pkgOfferState.getLinearId());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("Transaction id " + result.getId() +
-                    " committed to ledger.\n" + pkgOfferState);
+            return ResponseEntity.status(HttpStatus.CREATED).body(pkgUpdated + pkgOfferState.getLinearId());
         } catch(Exception e) {
             logger.error(pkgUpdateFailed + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -451,9 +449,9 @@ public class Controller {
                     BigDecimal.ROUND_HALF_EVEN), Currency.getInstance(money.getUnit()));
             SignedTransaction result = proxy.startTrackedFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class,
                     wrapper.getLinearId(), price).getReturnValue().get();
-            logger.info(pkgPurchased);
+            logger.info(pkgPurchased + wrapper.getLinearId());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(pkgPurchased);
+            return ResponseEntity.status(HttpStatus.CREATED).body(pkgPurchased + wrapper.getLinearId());
         } catch(IllegalArgumentException iae) {
             logger.error(pkgPurchaseFailed + iae.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(iae.getMessage());
@@ -468,10 +466,9 @@ public class Controller {
         try {
             SignedTransaction result = proxy.startTrackedFlowDynamic(DeletePkgFlow.DevInitiation.class,
                     linearId).getReturnValue().get();
-            logger.info(pkgDeleted);
+            logger.info(pkgDeleted + linearId);
 
-            return ResponseEntity.status(HttpStatus.OK).body("Transaction id " + result.getId() +
-                    " committed to ledger.\n" + pkgDeleted);
+            return ResponseEntity.status(HttpStatus.OK).body(pkgDeleted + linearId);
         } catch(Exception e) {
             logger.error(pkgDeleteFailed + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

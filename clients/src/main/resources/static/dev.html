@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Developer Panel</title>
+
+    <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity = "sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin = "anonymous">
+    <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity = "sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin = "anonymous">
+    <link rel = "stylesheet" type = "text/css" href = "css/index.css">
+
+    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity = "sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin = "anonymous"></script>
+    <script src = "https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.1/angular.min.js"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.min.js"></script>
+    <script src = "js/dev.js"></script>
+    <script src = "js/feeAgreementModal.js"></script>
+    <script src = "js/registerPkgModal.js"></script>
+    <script src = "js/devPkgDetailsModal.js"></script>
+    <script src = "js/updatePkgModal.js"></script>
+    <script src = "js/deletePkgModal.js"></script>
+</head>
+
+<body ng-app = "devModule" ng-controller = "DevCtrl as DevCtrl">
+<nav class = "navbar navbar-default">
+    <div class = "container-fluid">
+        <div class = "navbar-header">
+            <a class = "navbar-brand" href = "#">{{ DevCtrl.thisNode }}</a>
+        </div>
+        <button ng-click = "DevCtrl.indexPage()" type = "button" class = "btn btn-default navbar-btn"><span
+                class="glyphicon glyphicon-arrow-left"></span></button>
+        <button ng-click = "DevCtrl.openFeeAgreementModal()" type = "button" class = "btn btn-primary navbar-btn">
+            Fee Agreement
+        </button>
+        <button ng-click = "DevCtrl.openRegisterPkgModal()" type = "button" class = "btn btn-primary navbar-btn">
+            Register Package
+        </button>
+        <button ng-click = "DevCtrl.refresh()" type = "button" class = "btn btn-default navbar-btn"><span
+                class="glyphicon glyphicon-refresh"></span></button>
+    </div>
+</nav>
+
+<script type = "text/ng-template" id = "feeAgreementModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Establish Fee Agreement</h4>
+    </div>
+    <form>
+        <div class = "modal-body">
+            <div class = "form-group">
+                <label for = "createMaxAcceptableFee" class = "control-label">Max Acceptable Fee (%):</label>
+                <input type = "text" ng-model = "feeAgreementModal.form.maxAcceptableFee" class = "form-control" id = "createMaxAcceptableFee">
+            </div>
+            <div ng-show = "feeAgreementModal.formError" class = "form-group">
+                <div class = "alert alert-danger" role = "alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only">Error:</span>
+                    Enter a valid fee parameter - fee : [0 - 100]
+                </div>
+            </div>
+        </div>
+        <div class = "modal-footer">
+            <button ng-click = "feeAgreementModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+            <button ng-click = "feeAgreementModal.create()" type = "button" class = "btn btn-primary">Establish</button>
+        </div>
+    </form>
+</script>
+
+<script type = "text/ng-template" id = "feeAgreementMsgModal.html">
+    <div class = "modal-body" id = "establish-fee-agreement-modal-body">
+        {{ feeAgreementMsgModal.message }}
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "registerPkgModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Register Package</h4>
+    </div>
+    <form>
+        <div class = "modal-body">
+            <textarea style = "width: 100%; max-width: 100%;" rows = "30" id = "registerJson"></textarea>
+        </div>
+        <div class = "modal-footer">
+            <button ng-click = "registerPkgModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+            <button ng-click = "registerPkgModal.registerPkg()" type = "button" class = "btn btn-primary">Register</button>
+        </div>
+    </form>
+</script>
+
+<script type = "text/ng-template" id = "registerPkgMsgModal.html">
+    <div class = "modal-body" id = "register-pkg-modal-body">
+        {{ registerPkgMsgModal.message }}
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "pkgDetailsModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Package Details</h4>
+    </div>
+    <div class = "modal-body">
+        <pre>{{ pkgDetailsModal.pkg }}</pre>
+    </div>
+    <div class = "modal-footer">
+        <button ng-click = "pkgDetailsModal.cancel()" type = "button" class="btn btn-default">Close</button>
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "updatePkgModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Update Package</h4>
+    </div>
+    <form>
+        <div class = "modal-body">
+            <textarea style = "width: 100%; max-width: 100%;" rows = "30" id = "updateJson"></textarea>
+        </div>
+        <div class = "modal-footer">
+            <button ng-click = "updatePkgModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+            <button ng-click = "updatePkgModal.updatePkg()" type = "button" class = "btn btn-primary">Update</button>
+        </div>
+    </form>
+</script>
+
+<script type = "text/ng-template" id = "updatePkgMsgModal.html">
+    <div class = "modal-body" id = "update-pkg-modal-body">
+        {{ updatePkgMsgModal.message }}
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "deletePkgModal.html">
+    <div class = "modal-header">
+        <h4 class = "modal-title">Delete Package {{ deletePkgModal.linearId.id }}</h4>
+    </div>
+    <div class = "modal-body">
+        Are you sure to delete this package?
+    </div>
+    <div class = "modal-footer">
+        <button ng-click = "deletePkgModal.cancel()" type = "button" class = "btn btn-default">Close</button>
+        <button ng-click = "deletePkgModal.deletePkg()" type = "button" class = "btn btn-primary">Delete</button>
+    </div>
+</script>
+
+<script type = "text/ng-template" id = "deletePkgMsgModal.html">
+    <div class = "modal-body" id = "delete-pkg-modal-body">
+        {{ deletePkgMsgModal.message }}
+    </div>
+</script>
+
+<div class = "row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <div ng-show = "!DevCtrl.pkgs.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">There are no submitted packages</h3>
+            </div>
+            <div class = "panel-body"></div>
+        </div>
+        <div ng-show = "DevCtrl.pkgs.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">Packages:</h3>
+            </div>
+            <div class = "panel-body">
+                <table class = "table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Info ID</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat = "pkg in DevCtrl.pkgs">
+                        <td class = "vert-align">{{ pkg.linearId.id }}</td>
+                        <td class = "vert-align">{{ pkg.name }}</td>
+                        <td class = "vert-align">{{ pkg.pkgInfoId }}</td>
+                        <td>
+                            <div class = "btn-group" role = "group">
+                                <button ng-click = "DevCtrl.openPkgDetailsModal(pkg)" type = "button"
+                                        class = "btn btn-primary">Details
+                                </button>
+                                <button ng-click = "DevCtrl.openUpdatePkgModal()" type = "button"
+                                        class = "btn btn-primary">Update
+                                </button>
+                                <button ng-click = "DevCtrl.openDeletePkgModal(pkg.linearId)" type = "button"
+                                        class = "btn btn-primary">Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class = "col-md-1"></div>
+    </div>
+</div>
+
+</body>
+
+</html>

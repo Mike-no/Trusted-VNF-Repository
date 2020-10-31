@@ -1,22 +1,10 @@
 "use strict";
 
-angular.module('mainModule', ['ui.bootstrap']).controller('MainCtrl', function($http, $location, $uibModal) {
+angular.module('mainModule', ['ui.bootstrap']).controller('MainCtrl', function($http, $location, $uibModal, $window) {
     const main = this;
     const apiBaseURL = "/";
 
-    /* Displays the fee agreement establishment modal
-    main.openFeeAgreementModal = () => {
-        const feeAgreementModal = $uibModal.open({
-            templateUrl  : 'feeAgreementModal.html',
-            controller   : 'FeeAgreementModalCtrl',
-            controllerAs : 'feeAgreementModal',
-            resolve      : { apiBaseURL : () => apiBaseURL }
-        });
-
-        /* Ignores the modal result events
-        feeAgreementModal.result.then(() => {}, () => {});
-    };
-    */
+    $http.get(apiBaseURL + "me").then((response) => main.thisNode = response.data.me);
 
     /* Displays the self cash issuance modal */
     main.openSelfIssueCashModal = () => {
@@ -63,27 +51,27 @@ angular.module('mainModule', ['ui.bootstrap']).controller('MainCtrl', function($
         buyPkgModal.result.then(() => {}, () => {});
     };
 
-    /* Displays the pkg register modal
-    main.openRegisterPkgModal = () => {
-        const registerPkgModal = $uibModal.open({
-            templateUrl  : 'registerPkgModal.html',
-            controller   : 'registerPkgModalCtrl',
-            controllerAs : 'registerPkgModal',
-            resolve      : { apiBaseURL : () => apiBaseURL }
-        });
-
-        /* Ignores the modal result events
-        registerPkgModal.result.then(() => {}, () => {});
-    };
-    */
-
     main.refresh = () => {
         /* Update the marketplace (list of pkgs) */
-        $http.get(apiBaseURL + "marketplace").then((response) => main.pkgs = response.data);
+        $http.get(apiBaseURL + "marketplace").then((response) => main.pkgs = response.data)
+        .catch(function onError(error) {
+            console.log(error);
+        });
+
+        /* Update the licenses of the user */
+        $http.get(apiBaseURL + "pkg-license-state").then((response) => main.licenses = response.data)
+        .catch(function onError(error) {
+            console.log(error);
+        });
 
         /* Update the cash balances */
-        $http.get(apiBaseURL + "cash-balances").then((response) => main.cashBalances = response.data);
+        $http.get(apiBaseURL + "cash-balances").then((response) => main.cashBalances = response.data)
+        .catch(function onError(error) {
+            console.log(error);
+        });
     }
+
+    main.devPage = () => { $window.location.href = 'dev.html'; }
 
     main.refresh();
 });

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset = "UTF-8">
-    <title>Trusted Package Repository - Marketplace</title>
+    <title>Trusted Marketplace</title>
 
     <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity = "sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin = "anonymous">
@@ -18,7 +18,6 @@
     <script src = "https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.1/angular.min.js"></script>
     <script src = "https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.min.js"></script>
     <script src = "js/main.js"></script>
-    <script src = "js/feeAgreementModal.js"></script>
     <script src = "js/selfIssueCashModal.js"></script>
     <script src = "js/pkgDetailsModal.js"></script>
     <script src = "js/buyPkgModal.js"></script>
@@ -28,11 +27,9 @@
 <nav class = "navbar navbar-default">
     <div class = "container-fluid">
         <div class = "navbar-header">
-            <a class = "navbar-brand" href = "#">{{MainCtrl.thisNode}}</a>
+            <a class = "navbar-brand" href = "#">{{ MainCtrl.thisNode }}</a>
         </div>
-        <!-- <button ng-click = "MainCtrl.openFeeAgreementModal()" type = "button" class = "btn btn-primary navbar-btn">
-            Fee Agreement
-        </button> -->
+        <button ng-click = "MainCtrl.devPage()" type = "button" class = "btn btn-primary navbar-btn">Dev</button>
         <button ng-click = "MainCtrl.openSelfIssueCashModal()" type = "button" class = "btn btn-primary navbar-btn">
             Issue Cash
         </button>
@@ -40,37 +37,6 @@
                 class="glyphicon glyphicon-refresh"></span></button>
     </div>
 </nav>
-
-<script type = "text/ng-template" id = "feeAgreementModal.html">
-    <div class = "modal-header">
-        <h4 class = "modal-title">Establish Fee Agreement</h4>
-    </div>
-    <form>
-        <div class = "modal-body">
-            <div class = "form-group">
-                <label for = "createMaxAcceptableFee" class = "control-label">Max Acceptable Fee (%):</label>
-                <input type = "text" ng-model = "feeAgreementModal.form.maxAcceptableFee" class = "form-control" id = "createMaxAcceptableFee">
-            </div>
-            <div ng-show = "feeAgreementModal.formError" class = "form-group">
-                <div class = "alert alert-danger" role = "alert">
-                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                    <span class="sr-only">Error:</span>
-                    Enter a valid fee parameter - fee : [0 - 100]
-                </div>
-            </div>
-        </div>
-        <div class = "modal-footer">
-            <button ng-click = "feeAgreementModal.cancel()" type = "button" class = "btn btn-default">Close</button>
-            <button ng-click = "feeAgreementModal.create()" type = "button" class = "btn btn-primary">Establish</button>
-        </div>
-    </form>
-</script>
-
-<script type = "text/ng-template" id = "feeAgreementMsgModal.html">
-    <div class = "modal-body" id = "establish-fee-agreement-modal-body">
-        {{ feeAgreementMsgModal.message }}
-    </div>
-</script>
 
 <script type = "text/ng-template" id = "selfIssueCashModal.html">
     <div class = "modal-header">
@@ -124,6 +90,44 @@
                     <tbody>
                     <tr ng-repeat = "cash in MainCtrl.cashBalances">
                         <td class = "vert-align">{{ cash }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class = "col-md-1"></div>
+    </div>
+</div>
+
+<div class = "row">
+    <div class = "col-md-1"></div>
+    <div class = "col-md-10">
+        <div ng-show = "!MainCtrl.licenses.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">There are no purchased packages</h3>
+            </div>
+            <div class = "panel-body"></div>
+        </div>
+        <div ng-show = "MainCtrl.licenses.length" class = "panel panel-primary">
+            <div class = "panel-heading">
+                <h3 class = "panel-title">License of Packages purchased</h3>
+            </div>
+            <div class = "panel-body">
+                <table class = "table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Package Info ID</th>
+                        <th>Package Type</th>
+                        <th>Transaction Hash</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat = "license in MainCtrl.licenses">
+                        <td class = "vert-align">{{ license.pkgLicensed.state.data.linearId.id }}</td>
+                        <td class = "vert-align">{{ license.pkgLicensed.state.data.pkgInfoId }}</td>
+                        <td class = "vert-align">{{ license.pkgLicensed.state.data.pkgType }}</td>
+                        <td class = "vert-align">{{ license.pkgLicensed.ref.txhash }}</td>
                     </tr>
                     </tbody>
                 </table>

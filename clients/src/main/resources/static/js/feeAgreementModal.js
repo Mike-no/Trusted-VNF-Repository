@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('mainModule').controller('FeeAgreementModalCtrl', function($http, $uibModalInstance, $uibModal, apiBaseURL) {
+angular.module('devModule').controller('FeeAgreementModalCtrl', function($http, $uibModalInstance, $uibModal, apiBaseURL) {
     const feeAgreementModal = this;
 
     feeAgreementModal.form = {};
@@ -23,7 +23,9 @@ angular.module('mainModule').controller('FeeAgreementModalCtrl', function($http,
             $http.put(establishFeeAgreementEndpoint).then(
                 (result) => feeAgreementModal.displayMessage(result),
                 (result) => feeAgreementModal.displayMessage(result)
-            );
+            ).catch(function onError(error) {
+                console.log(error);
+            });
         }
     };
 
@@ -51,7 +53,7 @@ angular.module('mainModule').controller('FeeAgreementModalCtrl', function($http,
 });
 
 /* Controller for the success/fail modal */
-angular.module('mainModule').controller('feeAgreementMsgModalCtrl', function($uibModalInstance, message) {
+angular.module('devModule').controller('feeAgreementMsgModalCtrl', function($uibModalInstance, message) {
     const feeAgreementMsgModal = this;
     feeAgreementMsgModal.message = message.data;
 });

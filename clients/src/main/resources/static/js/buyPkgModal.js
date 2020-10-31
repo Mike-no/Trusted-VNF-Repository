@@ -24,7 +24,9 @@ angular.module('mainModule').controller('BuyPkgModalCtrl', function($http, $uibM
         }).then(
             (result) => buyPkgModal.displayMessage(result),
             (result) => buyPkgModal.displayMessage(result)
-        );
+        ).catch(function onError(error) {
+           console.log(error);
+        });
     };
 
     /* Displays the success/failure response from buy package operation */

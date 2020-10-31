@@ -35,10 +35,10 @@ public class ControllerUtils {
     public static final String negativeAmount             = "The <amount> parameter cannot be negative.";
     public static final String invalidISOCode             = "The <currency> parameter is not a valid ISO 4217 code.";
 
-    public static final String pkgPurchased               = "Package purchased successfully.";
+    public static final String pkgPurchased               = "Purchased package: ";
     public static final String pkgPurchaseFailed          = "Package purchase Failed : ";
 
-    public static final String pkgDeleted                 = "Package deleted successfully.";
+    public static final String pkgDeleted                 = "Deleted package: ";
     public static final String pkgDeleteFailed            = "Package delete Failed : ";
 
     public static final String cashBalancesRequestOK      = "Cash Balances retrieve request processed.";

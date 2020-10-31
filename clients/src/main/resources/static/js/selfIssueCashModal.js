@@ -23,7 +23,9 @@ angular.module('mainModule').controller('SelfIssueCashModalCtrl', function($http
             $http.post(selfIssueCashEndpoint).then(
                 (result) => selfIssueCashModal.displayMessage(result),
                 (result) => selfIssueCashModal.displayMessage(result)
-            );
+            ).catch(function onError(error) {
+                console.log(error);
+            });
         }
     };
 
