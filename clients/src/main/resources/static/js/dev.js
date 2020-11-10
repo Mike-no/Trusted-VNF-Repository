@@ -4,7 +4,13 @@ angular.module('devModule', ['ui.bootstrap']).controller('DevCtrl', function($ht
     const dev = this;
     const apiBaseURL = "/";
 
-    $http.get(apiBaseURL + "me").then((response) => dev.thisNode = response.data.me);
+    $http.get(apiBaseURL + "me").then((response) => {
+        dev.thisNode = response.data.me;
+        if(dev.thisNode == "O=Buyer, L=Pisa, C=IT")
+            document.getElementsByTagName("link").item(2).href = "./css/buyer.css";
+        else if(dev.thisNode == "O=RepositoryNode, L=Pisa, C=IT")
+            document.getElementsByTagName("link").item(2).href = "./css/repositoryNode.css";
+    });
 
     /* Displays the fee agreement establishment modal */
     dev.openFeeAgreementModal = () => {

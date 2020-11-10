@@ -4,7 +4,13 @@ angular.module('mainModule', ['ui.bootstrap']).controller('MainCtrl', function($
     const main = this;
     const apiBaseURL = "/";
 
-    $http.get(apiBaseURL + "me").then((response) => main.thisNode = response.data.me);
+    $http.get(apiBaseURL + "me").then((response) => {
+        main.thisNode = response.data.me;
+        if(main.thisNode == "O=Buyer, L=Pisa, C=IT")
+            document.getElementsByTagName("link").item(2).href = "./css/buyer.css";
+        else if(main.thisNode == "O=RepositoryNode, L=Pisa, C=IT")
+            document.getElementsByTagName("link").item(2).href = "./css/repositoryNode.css";
+    });
 
     /* Displays the self cash issuance modal */
     main.openSelfIssueCashModal = () => {
