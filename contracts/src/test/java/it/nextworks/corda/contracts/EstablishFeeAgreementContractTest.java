@@ -27,7 +27,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(devTest.getParty(), repositoryNodeTest.getParty()));
+                        new FeeAgreementState(10, devTest.getParty(), repositoryNodeTest.getParty()));
                 tx.fails();
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
@@ -44,7 +44,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 FeeAgreementState feeAgreementState =
-                        new FeeAgreementState(devTest.getParty(), repositoryNodeTest.getParty());
+                        new FeeAgreementState(10, devTest.getParty(), repositoryNodeTest.getParty());
                 tx.input(FeeAgreementContract.ID, feeAgreementState);
                 tx.output(FeeAgreementContract.ID, feeAgreementState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -62,7 +62,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 FeeAgreementState feeAgreementState =
-                        new FeeAgreementState(devTest.getParty(), repositoryNodeTest.getParty());
+                        new FeeAgreementState(10, devTest.getParty(), repositoryNodeTest.getParty());
                 tx.output(FeeAgreementContract.ID, feeAgreementState);
                 tx.output(FeeAgreementContract.ID, feeAgreementState);
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
@@ -80,7 +80,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(null, repositoryNodeTest.getParty()));
+                        new FeeAgreementState(10, null, repositoryNodeTest.getParty()));
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
 
@@ -96,7 +96,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(devTest.getParty(), null));
+                        new FeeAgreementState(10, devTest.getParty(), null));
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
 
@@ -113,7 +113,7 @@ public class EstablishFeeAgreementContractTest {
             final TestIdentity devTestDupe = new TestIdentity(devTest.getName(), devTest.getKeyPair());
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(devTest.getParty(), devTestDupe.getParty()));
+                        new FeeAgreementState(10, devTest.getParty(), devTestDupe.getParty()));
                 tx.command(ImmutableList.of(devTest.getPublicKey(), repositoryNodeTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
 
@@ -129,7 +129,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(devTest.getParty(), repositoryNodeTest.getParty()));
+                        new FeeAgreementState(10, devTest.getParty(), repositoryNodeTest.getParty()));
                 tx.command(ImmutableList.of(repositoryNodeTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
 
@@ -145,7 +145,7 @@ public class EstablishFeeAgreementContractTest {
         ledger(ledgerServices, (ledger -> {
             ledger.transaction(tx -> {
                 tx.output(FeeAgreementContract.ID,
-                        new FeeAgreementState(devTest.getParty(), repositoryNodeTest.getParty()));
+                        new FeeAgreementState(10, devTest.getParty(), repositoryNodeTest.getParty()));
                 tx.command(ImmutableList.of(devTest.getPublicKey()),
                         new FeeAgreementContract.Commands.EstablishFeeAgreement());
 

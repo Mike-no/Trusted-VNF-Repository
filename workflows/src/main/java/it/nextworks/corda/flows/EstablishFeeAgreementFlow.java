@@ -169,7 +169,7 @@ public class EstablishFeeAgreementFlow {
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
             final FeeAgreementState feeAgreementState =
-                    new FeeAgreementState(devNode, repositoryNode);
+                    new FeeAgreementState(10, devNode, repositoryNode);
             final Command<FeeAgreementContract.Commands.EstablishFeeAgreement> txCommand =
                     new Command<>(new FeeAgreementContract.Commands.EstablishFeeAgreement(),
                             ImmutableList.of(devNode.getOwningKey(),

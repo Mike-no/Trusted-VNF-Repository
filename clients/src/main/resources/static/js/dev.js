@@ -81,6 +81,12 @@ angular.module('devModule', ['ui.bootstrap']).controller('DevCtrl', function($ht
     };
 
     dev.refresh = () => {
+        /* Update the establishedFee field */
+        $http.get(apiBaseURL + "fee-agreement-state").then((response) => dev.establishedFee = response.data.fee + "% Fee Established")
+        .catch(function onError(error) {
+            console.log(error);
+        });
+
         /* Update the list of the developer's packages */
         $http.get(apiBaseURL + "pkg-offer-state").then((response) => dev.pkgs = response.data)
         .catch(function onError(error) {

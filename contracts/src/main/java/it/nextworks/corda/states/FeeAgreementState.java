@@ -13,7 +13,7 @@ import java.util.List;
 @BelongsToContract(FeeAgreementContract.class)
 public class FeeAgreementState implements ContractState {
 
-    private static final int fee = 10;
+    private final int fee;
 
     private final Party developer;
     private final Party repositoryNode;
@@ -23,7 +23,9 @@ public class FeeAgreementState implements ContractState {
      * @param developer      developer / author that want su submit a package in the marketplace
      * @param repositoryNode Repository Node that will store this FeeAgreementState in the vault
      */
-    public FeeAgreementState(Party developer, Party repositoryNode) {
+    public FeeAgreementState(int fee, Party developer, Party repositoryNode) {
+        this.fee = fee;
+
         this.developer = developer;
         this.repositoryNode = repositoryNode;
     }
