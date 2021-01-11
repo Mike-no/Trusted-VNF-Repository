@@ -29,7 +29,7 @@ dependencies {
 }
 
 springBoot {
-    mainClassName = "it.nextworks.corda.webserver.Server"
+    mainClassName = "it.nextworks.corda.webserver.WebServerStarter"
 }
 
 /* These task will start the spring boot server that connects to your node (via RPC connection). All of the http requests

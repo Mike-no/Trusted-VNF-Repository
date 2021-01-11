@@ -1,11 +1,11 @@
 package it.nextworks.corda.states;
 
-import com.sun.istack.NotNull;
 import it.nextworks.corda.contracts.FeeAgreementContract;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
