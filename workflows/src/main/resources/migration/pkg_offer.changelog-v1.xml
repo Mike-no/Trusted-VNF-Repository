@@ -15,7 +15,7 @@
             <column name="name" type="NVARCHAR(64)"/>
             <column name="description" type="NVARCHAR(64)"/>
             <column name="version" type="NVARCHAR(64)"/>
-            <column name="value" type="DOUBLE"/>
+            <column name="value" type="DECIMAL(19,2)"/>
             <column name="unit" type="NVARCHAR(64)"/>
         </createTable>
     </changeSet>

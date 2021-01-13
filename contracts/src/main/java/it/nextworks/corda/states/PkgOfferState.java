@@ -130,7 +130,8 @@ public class PkgOfferState implements LinearState, QueryableState {
     public PersistentState generateMappedObject(@NotNull MappedSchema schema) {
         if(schema instanceof PkgOfferSchemaV1)
             return new PkgOfferSchemaV1.PersistentPkgOfferState(linearId.getId(), name, description,
-                    version, poPrice.getPrice().getValue(), poPrice.getPrice().getUnit());
+                    version, BigDecimal.valueOf(poPrice.getPrice().getValue()).setScale(2,
+                    BigDecimal.ROUND_HALF_EVEN), poPrice.getPrice().getUnit());
         else
             throw new IllegalArgumentException("Unrecognised schema " + schema);
     }

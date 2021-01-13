@@ -25,10 +25,10 @@ public class ControllerUtils {
     public static final String pkgUpdated                 = "Updated package: ";
     public static final String pkgUpdateFailed            = "Package update failed : ";
     public static final String notExistingPkg             = "The specified package to update does not exist.";
-    public static final String downBoardingRequired       = "You must down-board the package first.";
 
     public static final String marketplaceRequestOK       = "Marketplace retrieve request processed.";
     public static final String pkgsGetFailed              = "Packages retrieve Failed : ";
+    public static final String badRequestValue            = "The requested value criteria cannot be processed.";
 
     public static final String cashIssued                 = "Required cash amount issued.";
     public static final String cashIssueFailed            = "Cash issue Failed : ";

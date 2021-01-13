@@ -156,6 +156,13 @@ public class DriverBasedFlowsTest {
                 List<PkgOfferState> pkgOfferStateList =
                         buyerHandle.getRpc().startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
                                 .getReturnValue().get();
+
+                List<PkgOfferState> pkgOfferStateList1 =
+                        buyerHandle.getRpc().startFlowDynamic(GetFilteredPkgsFlow.GetFilteredPkgsInfoInitiation.class,
+                                new GetPkgsFlowUtils.QueryBuilder().setName(PkgOfferUtils.testName).build())
+                                .getReturnValue().get();
+
+                assert (pkgOfferStateList.size() == pkgOfferStateList1.size());
                 assert (pkgOfferStateList.size() == 1);
                 PkgOfferState retrievedPkgOfferState = pkgOfferStateList.get(0);
                 UniqueIdentifier retrievedPkgId = retrievedPkgOfferState.getLinearId();

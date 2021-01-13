@@ -41,7 +41,6 @@ public class GetPkgsFlowTest {
 
         repositoryNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(repositoryX500Name));
         buyerNodeTest = mockNetwork.createPartyNode(CordaX500Name.parse(buyerX500Name));
-        repositoryNodeTest.registerInitiatedFlow(RegisterPkgFlow.RepositoryNodeAcceptor.class);
 
         mockNetwork.runNetwork();
     }
@@ -65,7 +64,7 @@ public class GetPkgsFlowTest {
     }
 
     /** Function used to generate a transaction that will output a PkgOfferState */
-    private void generatePkgOfferState() throws Exception {
+    private PkgOfferState generatePkgOfferState() throws Exception {
         ProductOfferingPrice poPrice = new ProductOfferingPrice(PkgOfferUtils.testPoId, PkgOfferUtils.testLink, PkgOfferUtils.testDescription,
                 PkgOfferUtils.testIsBundle, PkgOfferUtils.testLastUpdate, PkgOfferUtils.testLifecycleStatus,
                 PkgOfferUtils.testPoName, PkgOfferUtils.testPercentage, PkgOfferUtils.testPriceType,
@@ -80,14 +79,13 @@ public class GetPkgsFlowTest {
         mockNetwork.runNetwork();
 
         SignedTransaction signedTransaction = future.get();
-
-        signedTransaction.getTx().outputsOfType(PkgOfferState.class).get(0);
+        return signedTransaction.getTx().outputsOfType(PkgOfferState.class).get(0);
     }
 
     @Test
     public void storedPkgOfferCanBeViewedInTheMarketplace() throws Exception {
         generateFeeAgreementState();
-        generatePkgOfferState();
+        PkgOfferState pkgOfferState = generatePkgOfferState();
 
         GetPkgsFlow.GetPkgsInfoInitiation flow = new GetPkgsFlow.GetPkgsInfoInitiation();
         CordaFuture<List<PkgOfferState>> future = buyerNodeTest.startFlow(flow);
@@ -97,8 +95,8 @@ public class GetPkgsFlowTest {
         List<PkgOfferState> pkgOfferStateListList = future.get();
 
         assert (pkgOfferStateListList.size() == 1);
-        PkgOfferState pkgOfferState = pkgOfferStateListList.get(0);
-        checkPkgOfferStateCorrectness(pkgOfferState, pkgOfferState.getLinearId(), pkgOfferState.getPoPrice());
+        checkPkgOfferStateCorrectness(pkgOfferStateListList.get(0), pkgOfferState.getLinearId(),
+                pkgOfferState.getPoPrice());
     }
 
     private void checkPkgOfferStateCorrectness(@NotNull PkgOfferState recordedState, @NotNull UniqueIdentifier pkgId,

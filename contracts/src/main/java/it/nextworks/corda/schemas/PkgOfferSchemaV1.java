@@ -6,6 +6,7 @@ import net.corda.core.schemas.PersistentState;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.UUID;
 //4.6 changes
@@ -26,7 +27,7 @@ public class PkgOfferSchemaV1 extends MappedSchema {
         @Column(name = "name") private final String name;
         @Column(name = "description") private final String description;
         @Column(name = "version") private final String version;
-        @Column(name = "value") private final double value;
+        @Column(name = "value") private final BigDecimal value;
         @Column(name = "unit") private final String unit;
 
         /**
@@ -42,7 +43,7 @@ public class PkgOfferSchemaV1 extends MappedSchema {
                                        String name,
                                        String description,
                                        String version,
-                                       double value,
+                                       BigDecimal value,
                                        String unit) {
             this.linearId    = linearId;
             this.name        = name;
@@ -58,7 +59,7 @@ public class PkgOfferSchemaV1 extends MappedSchema {
             name        = null;
             description = null;
             version     = null;
-            value       = 0;
+            value       = null;
             unit        = null;
         }
 
@@ -78,7 +79,7 @@ public class PkgOfferSchemaV1 extends MappedSchema {
             return version;
         }
 
-        public double getValue() {
+        public BigDecimal getValue() {
             return value;
         }
 

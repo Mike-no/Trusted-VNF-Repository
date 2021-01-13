@@ -408,6 +408,45 @@ public class Controller {
         }
     }
 
+    @GetMapping(value = "marketplace-search", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getFilteredPkgs(@RequestParam(value = "uuid", required = false)UUID uuid,
+                                             @RequestParam(value = "name", required = false)String name,
+                                             @RequestParam(value = "description", required = false)String description,
+                                             @RequestParam(value = "version", required = false)String version,
+                                             @RequestParam(value = "value", required = false)String value,
+                                             @RequestParam(value = "unit", required = false)String unit) {
+        GetPkgsFlowUtils.QueryBuilder queryBuilder = new GetPkgsFlowUtils.QueryBuilder()
+                .setLinearId(uuid)
+                .setName(name)
+                .setDescription(description)
+                .setVersion(version);
+
+        if(value != null) {
+            try {
+                BigDecimal bigDecimalValue = new BigDecimal(value).setScale(2,
+                        BigDecimal.ROUND_HALF_EVEN);
+                queryBuilder.setValue(bigDecimalValue);
+            } catch (NumberFormatException nfe) {
+                logger.error(badRequestValue + nfe.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(badRequestValue);
+            }
+        }
+
+        queryBuilder.setUnit(unit);
+
+        try {
+            List<PkgOfferState> result =
+                    proxy.startTrackedFlowDynamic(GetFilteredPkgsFlow.GetFilteredPkgsInfoInitiation.class,
+                            queryBuilder.build()).getReturnValue().get();
+            logger.info(marketplaceRequestOK);
+
+            return ResponseEntity.status(HttpStatus.OK).body(result);
+        } catch(Exception e) {
+            logger.error(pkgsGetFailed + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
     @PostMapping(value = "self-issue-cash", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<String> selfIssueCash(@RequestParam(value = "amount")int amount,
                                                 @RequestParam(value = "currency")String currency) {

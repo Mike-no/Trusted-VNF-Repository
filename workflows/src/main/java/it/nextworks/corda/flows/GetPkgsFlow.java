@@ -9,7 +9,6 @@ import net.corda.core.identity.Party;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.PageSpecification;
 import net.corda.core.node.services.vault.QueryCriteria.VaultQueryCriteria;
-import net.corda.core.serialization.CordaSerializable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,22 +19,6 @@ import static net.corda.core.node.services.vault.QueryCriteriaUtils.DEFAULT_PAGE
 import static net.corda.core.node.services.vault.QueryCriteriaUtils.DEFAULT_PAGE_SIZE;
 
 public class GetPkgsFlow {
-
-    @CordaSerializable
-    public static class PkgsInfoContainer {
-
-        private final List<PkgOfferState> pkgsList;
-
-        /**
-         * Constructor of the PkgsInfoContainer class
-         * @param pkgsList list of PkgOfferState
-         */
-        public PkgsInfoContainer(List<PkgOfferState> pkgsList) { this.pkgsList = pkgsList; }
-
-        /* Getter */
-
-        public List<PkgOfferState> getPkgsList() { return pkgsList; }
-    }
 
     @InitiatingFlow
     @StartableByRPC
