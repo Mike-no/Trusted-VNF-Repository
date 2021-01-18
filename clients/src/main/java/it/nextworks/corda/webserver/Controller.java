@@ -344,7 +344,7 @@ public class Controller {
             return res;
 
         try {
-            SignedTransaction result = proxy.startTrackedFlowDynamic(RegisterPkgFlow.DevInitiation.class,
+            SignedTransaction result = proxy.startFlowDynamic(RegisterPkgFlow.DevInitiation.class,
                     wrapper.getName(), wrapper.getDescription(), wrapper.getVersion(), pkgInfoId,
                     wrapper.getImageLink(), pkgType, wrapper.getPoPrice()).getReturnValue().get();
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
@@ -397,7 +397,7 @@ public class Controller {
     @GetMapping(value = "marketplace", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getPkgs() {
         try {
-            List<PkgOfferState> result = proxy.startTrackedFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
+            List<PkgOfferState> result = proxy.startFlowDynamic(GetPkgsFlow.GetPkgsInfoInitiation.class)
                     .getReturnValue().get();
             logger.info(marketplaceRequestOK);
 
@@ -436,7 +436,7 @@ public class Controller {
 
         try {
             List<PkgOfferState> result =
-                    proxy.startTrackedFlowDynamic(GetFilteredPkgsFlow.GetFilteredPkgsInfoInitiation.class,
+                    proxy.startFlowDynamic(GetFilteredPkgsFlow.GetFilteredPkgsInfoInitiation.class,
                             queryBuilder.build()).getReturnValue().get();
             logger.info(marketplaceRequestOK);
 
