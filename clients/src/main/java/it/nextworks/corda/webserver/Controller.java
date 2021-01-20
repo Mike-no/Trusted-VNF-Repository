@@ -280,7 +280,7 @@ public class Controller {
     @PutMapping(value = "establish-fee-agreement", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<String> establishFeeAgreement(@RequestParam(value = "maxAcceptableFee") int maxAcceptableFee) {
         try {
-            proxy.startTrackedFlowDynamic(EstablishFeeAgreementFlow.DevInitiation.class, maxAcceptableFee)
+            proxy.startFlowDynamic(EstablishFeeAgreementFlow.DevInitiation.class, maxAcceptableFee)
                     .getReturnValue().get();
             logger.info(feeAgreementEstablished);
 
@@ -306,7 +306,7 @@ public class Controller {
             request = catalogueURL + "nsd/v1/pnf_descriptors/";
         request += pkgInfoId;
 
-        logger.info("GET " + request);
+        /* logger.info("GET " + request); */
 
         try {
             URL url = new URL(request);
@@ -326,7 +326,7 @@ public class Controller {
                 }
             }
 
-            logger.info(getRequestSucceed);
+            /* logger.info(getRequestSucceed); */
             return null;
         } catch(IOException ie) {
             logger.error(pkgRegisterFailed + errorWhileProcessingRq);
@@ -381,7 +381,7 @@ public class Controller {
             return res;
 
         try {
-            SignedTransaction result = proxy.startTrackedFlowDynamic(UpdatePkgFlow.DevInitiation.class,
+            SignedTransaction result = proxy.startFlowDynamic(UpdatePkgFlow.DevInitiation.class,
                     wrapper.getLinearId(), wrapper.getName(), wrapper.getDescription(), wrapper.getVersion(),
                     wrapper.getImageLink(), wrapper.getPoPrice()).getReturnValue().get();
             PkgOfferState pkgOfferState = result.getTx().outputsOfType(PkgOfferState.class).get(0);
@@ -455,7 +455,7 @@ public class Controller {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(negativeAmount);
         }
         try {
-            Cash.State cashState = proxy.startTrackedFlowDynamic(SelfIssueCashFlow.class,
+            Cash.State cashState = proxy.startFlowDynamic(SelfIssueCashFlow.class,
                     new Amount<>((long) amount * 100, Currency.getInstance(currency))).getReturnValue().get();
             logger.info(cashIssued);
 
@@ -486,7 +486,7 @@ public class Controller {
 
             Amount<Currency> price = Amount.fromDecimal(BigDecimal.valueOf(money.getValue()).setScale(2,
                     BigDecimal.ROUND_HALF_EVEN), Currency.getInstance(money.getUnit()));
-            SignedTransaction result = proxy.startTrackedFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class,
+            SignedTransaction result = proxy.startFlowDynamic(BuyPkgFlow.PkgBuyerInitiation.class,
                     wrapper.getLinearId(), price).getReturnValue().get();
             logger.info(pkgPurchased + wrapper.getLinearId());
 
@@ -503,7 +503,7 @@ public class Controller {
     @PutMapping(value = "delete-pkg", produces = TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deletePkg(@RequestBody UniqueIdentifier linearId) {
         try {
-            SignedTransaction result = proxy.startTrackedFlowDynamic(DeletePkgFlow.DevInitiation.class,
+            SignedTransaction result = proxy.startFlowDynamic(DeletePkgFlow.DevInitiation.class,
                     linearId).getReturnValue().get();
             logger.info(pkgDeleted + linearId);
 

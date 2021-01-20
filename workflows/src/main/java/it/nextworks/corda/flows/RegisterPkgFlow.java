@@ -188,6 +188,7 @@ public class RegisterPkgFlow {
                         throw new IllegalArgumentException(notPkgStateErr);
 
                     /* Verify that a fee agreement exists between the developer and the repository node */
+                    /*
                     QueryCriteria.VaultQueryCriteria queryCriteria =
                             new QueryCriteria.VaultQueryCriteria()
                                     .withExactParticipants(ImmutableList.of(
@@ -196,6 +197,7 @@ public class RegisterPkgFlow {
                             getServiceHub().getVaultService().queryBy(FeeAgreementState.class, queryCriteria).getStates();
                     if(lst.isEmpty())
                         throw new NotExistingAgreementException();
+                    */
                 }
             }
             /* Check and Sign the transaction, get the hash value of the obtained transaction */
