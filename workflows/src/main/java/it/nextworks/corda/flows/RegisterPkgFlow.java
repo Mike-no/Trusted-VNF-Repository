@@ -3,6 +3,7 @@ package it.nextworks.corda.flows;
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
 import it.nextworks.corda.contracts.PkgOfferContract;
+import it.nextworks.corda.schemas.FeeAgreementSchemaV1;
 import it.nextworks.corda.states.FeeAgreementState;
 import it.nextworks.corda.states.PkgOfferState;
 import it.nextworks.corda.states.productOfferingPrice.ProductOfferingPrice;
@@ -11,6 +12,9 @@ import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
+import net.corda.core.node.services.Vault;
+import net.corda.core.node.services.vault.Builder;
+import net.corda.core.node.services.vault.FieldInfo;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
@@ -21,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 import static it.nextworks.corda.flows.RegisterPkgFlowUtils.*;
+import static net.corda.core.node.services.vault.QueryCriteriaUtils.getField;
 
 public class RegisterPkgFlow {
     /**
@@ -184,20 +189,33 @@ public class RegisterPkgFlow {
                 @Override
                 protected void checkTransaction(@NotNull SignedTransaction stx) throws NotExistingAgreementException {
                     ContractState output = stx.getTx().getOutputs().get(0).getData();
-                    if(!(output instanceof PkgOfferState))
+                    if(!(output instanceof PkgOfferState)) {
                         throw new IllegalArgumentException(notPkgStateErr);
+                    }
 
                     /* Verify that a fee agreement exists between the developer and the repository node */
-                    /*
-                    QueryCriteria.VaultQueryCriteria queryCriteria =
-                            new QueryCriteria.VaultQueryCriteria()
-                                    .withExactParticipants(ImmutableList.of(
-                                            devSession.getCounterparty(), getOurIdentity()));
+                    QueryCriteria criteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
+
+                    try {
+                        FieldInfo attributeDeveloper =
+                                getField("developer", FeeAgreementSchemaV1.PersistentFeeAgreementState.class);
+                        criteria =
+                                criteria.and(new QueryCriteria.VaultCustomQueryCriteria(Builder.equal(attributeDeveloper,
+                                        devSession.getCounterparty().getName().toString())));
+
+                        FieldInfo attributeRepository =
+                                getField("repository", FeeAgreementSchemaV1.PersistentFeeAgreementState.class);
+                        criteria =
+                                criteria.and(new QueryCriteria.VaultCustomQueryCriteria(Builder.equal(attributeRepository,
+                                        getOurIdentity().getName().toString())));
+                    } catch (NoSuchFieldException e) {
+                        throw new IllegalArgumentException(malformedDbTable);
+                    }
+
                     List<StateAndRef<FeeAgreementState>> lst =
-                            getServiceHub().getVaultService().queryBy(FeeAgreementState.class, queryCriteria).getStates();
+                            getServiceHub().getVaultService().queryBy(FeeAgreementState.class, criteria).getStates();
                     if(lst.isEmpty())
                         throw new NotExistingAgreementException();
-                    */
                 }
             }
             /* Check and Sign the transaction, get the hash value of the obtained transaction */

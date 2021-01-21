@@ -12,6 +12,7 @@ public class RegisterPkgFlowUtils {
     public static final String repositoryX500Name     = "O=RepositoryNode,L=Pisa,C=IT";
 
     public static final String notPkgStateErr         = "This must be a package transaction.";
+    public static final String malformedDbTable       = "The Database table cannot be used: malformed column(s).";
     public static final String notExistingAgreement   = "The developer hasn't already establish a fee agreement " +
             "with the Repository Node.";
 
